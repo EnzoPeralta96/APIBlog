@@ -1,4 +1,6 @@
 using APIBlog.Data;
+using APIBlog.Repository;
+using APIBlog.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -10,6 +12,11 @@ builder.Services.AddControllers();
 //Inyecto la cadena de conexión al dbContext
 var connectionString = builder.Configuration.GetConnectionString("SqliteConnection");
 builder.Services.AddDbContext<BlogDbContext>(options => options.UseSqlite(connectionString));
+
+
+builder.Services.AddScoped<IBlogRepository, BlogRepository>();
+builder.Services.AddScoped<IPostRepository, PostRepository>();
+builder.Services.AddScoped<BlogService, BlogService>();
 
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
