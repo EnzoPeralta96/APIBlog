@@ -21,7 +21,10 @@ public class BlogService
     public bool Update(int id, BlogViewModels blog_vm)
     {
         if (blogRepository.GetBlog(id) is null) return false;
-        if (blogRepository.GetBlog(blog_vm.Name) is not null) return false;
+
+        var blog = blogRepository.GetBlog(blog_vm.Name);
+
+        if (blog is not null && blog.Id != id) return false;
         blogRepository.Update(id, new Blog(blog_vm));
         return true;
     }
@@ -35,6 +38,16 @@ public class BlogService
     public Blog Blog(int id)
     {
         return blogRepository.GetBlog(id);
+    }
+
+    public Blog Blog(string name)
+    {
+        return blogRepository.GetBlog(name);
+    }
+
+    public List<Blog> Blogs()
+    {
+        return blogRepository.Blogs();
     }
     public List<Post> PostsByBlog(int id)
     {

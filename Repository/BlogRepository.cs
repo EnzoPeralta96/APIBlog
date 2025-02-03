@@ -13,7 +13,6 @@ public class BlogRepository : IBlogRepository
         _blogDbContext = blogDb;
     }
 
-
     public void Create(Blog blog)
     {
         _blogDbContext.Blogs.Add(blog);
@@ -35,11 +34,11 @@ public class BlogRepository : IBlogRepository
         _blogDbContext.Blogs.Remove(searched_blog);
         _blogDbContext.SaveChanges();
     }
-
-
+    
     public Blog GetBlog(int id)
     {
-        return _blogDbContext.Blogs.Find(id);
+        var blog = _blogDbContext.Blogs.Find(id);
+        return blog;
     }
 
     public Blog GetBlog(string name)
