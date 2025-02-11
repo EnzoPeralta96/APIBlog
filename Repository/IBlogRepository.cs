@@ -4,13 +4,13 @@ namespace APIBlog.Repository;
 
 public interface IBlogRepository
 {
-    public void Create(Blog blog);
-    public void Update(int id, Blog blog);
-    public void Delete(int id);
-    public Blog GetBlog(int id);
-    public Blog GetBlog(string name);
-    public List<Blog> Blogs();
-    public List<Post> PostsByBlog(int id);
-    public List<Post> PostsByBlog(string name);
+    public Task CreateAsync(Blog blog);
+    public Task UpdateAsync(int id, Blog blog);
+    public Task DeleteAsync(int id);
+    public Task<Blog> GetBlogAsync(int id);
+    public Task<Blog> GetBlogAsync(string name);
+    public Task<List<Blog>> BlogsAsync();
+    public Task<List<Post>> PostsByBlogAsync(int id);
+    public Task<List<Post>> PostsByBlogAsync(string name);
 
 }

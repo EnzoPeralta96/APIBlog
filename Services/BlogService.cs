@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using APIBlog.Models;
 using APIBlog.Repository;
 using APIBlog.ViewModels;
@@ -11,51 +12,87 @@ public class BlogService
         this.blogRepository = blogRepository;
     }
 
-    public bool Create(BlogViewModels blog_vm)
+    public async Task<BlogState> CreateAsync(BlogViewModels blog_vm)
     {
-        if (blogRepository.GetBlog(blog_vm.Name) is not null) return false;
-        blogRepository.Create(new Blog(blog_vm));
-        return true;
+        var blog = await blogRepository.GetBlogAsync(blog_vm.Name);
+
+        if (blog is not null) return BlogState.NameInUse;
+
+        await blogRepository.CreateAsync(new Blog(blog_vm));
+
+        return BlogState.Created;
     }
 
-    public bool Update(int id, BlogViewModels blog_vm)
+    public async Task<BlogState> UpdateAsync(int id, BlogViewModels blog_vm)
     {
-        if (blogRepository.GetBlog(id) is null) return false;
+        var blog = await blogRepository.GetBlogAsync(id);
 
-        var blog = blogRepository.GetBlog(blog_vm.Name);
+        if (blog is null) return BlogState.NotExist;
 
-        if (blog is not null && blog.Id != id) return false;
-        blogRepository.Update(id, new Blog(blog_vm));
-        return true;
-    }
+        var existing_blog = await blogRepository.GetBlogAsync(blog_vm.Name);
 
-    public bool Delete(int id)
-    {
-        if (blogRepository.GetBlog(id) is null) return false;
-        blogRepository.Delete(id);
-        return true;
-    }
-    public Blog Blog(int id)
-    {
-        return blogRepository.GetBlog(id);
+        if (blogNameInUse(id, existing_blog)) return BlogState.NameInUse;
+
+        await blogRepository.UpdateAsync(id, new Blog(blog_vm));
+
+        return BlogState.Updated;
     }
 
-    public Blog Blog(string name)
+    public async Task<BlogState> DeleteAsync(int id)
     {
-        return blogRepository.GetBlog(name);
+        var blog = await blogRepository.GetBlogAsync(id);
+
+        if (blog is null) return BlogState.NotExist;
+
+        await blogRepository.DeleteAsync(id);
+
+        return BlogState.Deleted;
+    }
+    public async Task<BlogResultViewModels> BlogAsync(int id)
+    {
+        var blog = await blogRepository.GetBlogAsync(id);
+
+        if (blog is null) return new BlogResultViewModels(BlogState.NotExist);
+
+        return new BlogResultViewModels(BlogState.Existing, blog);
+    }
+    public async Task<BlogResultViewModels> BlogAsync(string name)
+    {
+        var blog = await blogRepository.GetBlogAsync(name);
+
+        if (blog is null) return new BlogResultViewModels(BlogState.NotExist);
+
+        return new BlogResultViewModels(BlogState.Existing, blog);
+    }
+    public async Task<List<Blog>> BlogsAsync()
+    {
+        return await blogRepository.BlogsAsync();
+    }
+    public async Task<PostResultViewModels> PostsByBlogAsync(int id)
+    {
+        var blog = await blogRepository.GetBlogAsync(id);
+
+        if (blog is null) return new PostResultViewModels(BlogState.NotExist);
+
+        var posts = await blogRepository.PostsByBlogAsync(id);
+
+        return new PostResultViewModels(BlogState.Existing, posts);
+    }
+    public async Task<PostResultViewModels> PostsByBlogAsync(string name)
+    {
+        var blog = await blogRepository.GetBlogAsync(name);
+
+        if (blog is null) return new PostResultViewModels(BlogState.NotExist);
+
+        var posts = await blogRepository.PostsByBlogAsync(name);
+
+        return new PostResultViewModels(BlogState.Existing, posts);
+    }
+    private  bool blogNameInUse(int id, Blog? existing_blog)
+    {
+        return existing_blog is not null && existing_blog.Id != id;
     }
 
-    public List<Blog> Blogs()
-    {
-        return blogRepository.Blogs();
-    }
-    public List<Post> PostsByBlog(int id)
-    {
-        return blogRepository.PostsByBlog(id);
-    }
-    public List<Post> PostsByBlog(string name)
-    {
-        return blogRepository.PostsByBlog(name);
-    }
+   
 
 }

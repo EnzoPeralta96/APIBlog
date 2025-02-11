@@ -1,6 +1,8 @@
+using System.Threading.Tasks;
 using APIBlog.Data;
 using APIBlog.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualBasic;
 
 namespace APIBlog.Repository;
 
@@ -13,57 +15,67 @@ public class BlogRepository : IBlogRepository
         _blogDbContext = blogDb;
     }
 
-    public void Create(Blog blog)
+    public async Task CreateAsync(Blog blog)
     {
-        _blogDbContext.Blogs.Add(blog);
-        _blogDbContext.SaveChanges();
+        await _blogDbContext.Blogs.AddAsync(blog);
+        await _blogDbContext.SaveChangesAsync();
     }
 
-    public void Update(int id, Blog blog)
+    public async Task UpdateAsync(int id, Blog blog)
     {
-
-        var searched_blog = _blogDbContext.Blogs.Find(id);
+        var searched_blog = await _blogDbContext.Blogs.FindAsync(id);
         searched_blog.Name = blog.Name;
         searched_blog.Description = blog.Description;
-        _blogDbContext.SaveChanges();
+        await _blogDbContext.SaveChangesAsync();
     }
 
-    public void Delete(int id)
+    public async Task DeleteAsync(int id)
     {
-        var searched_blog = _blogDbContext.Blogs.Find(id);
+        var searched_blog = await _blogDbContext.Blogs.FindAsync(id);
         _blogDbContext.Blogs.Remove(searched_blog);
-        _blogDbContext.SaveChanges();
+        await _blogDbContext.SaveChangesAsync();
     }
-    
-    public Blog GetBlog(int id)
+    public async Task<Blog> GetBlogAsync(int id)
     {
-        var blog = _blogDbContext.Blogs.Find(id);
+        var blog = await _blogDbContext.Blogs
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(bl => bl.Id == id);
         return blog;
     }
 
-    public Blog GetBlog(string name)
+    public async Task<Blog> GetBlogAsync(string name)
     {
-        return _blogDbContext.Blogs.FirstOrDefault(bl => bl.Name == name);
+        var blog = await _blogDbContext.Blogs
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(bl => bl.Name == name);
+        return blog;
     }
 
-    public List<Blog> Blogs()
+    public async Task<List<Blog>> BlogsAsync()
     {
-        return _blogDbContext.Blogs.ToList();
+        var blogs = await _blogDbContext.Blogs
+                    .AsNoTracking()
+                    .ToListAsync();
+        return blogs;
     }
-    public List<Post> PostsByBlog(int id)
+    public async Task<List<Post>> PostsByBlogAsync(int id)
     {
-        return _blogDbContext.Posts
-                .Where(p => p.BlogId == id)
-                .ToList();
+        var posts = await _blogDbContext.Posts
+                        .Where(p => p.BlogId == id)
+                        .AsNoTracking()
+                        .ToListAsync();
+        return posts;
     }
 
-    public List<Post> PostsByBlog(string name)
+    public async Task<List<Post>> PostsByBlogAsync(string name)
     {
-        return _blogDbContext.Posts
-                .Where(p => p.Blog.Name == name)
-                .ToList();
+        var posts = await _blogDbContext.Posts
+                    .Where(p => p.Blog.Name == name)
+                    .AsNoTracking()
+                    .ToListAsync();
+        return posts;
     }
-    
+
 }
 
 

@@ -21,63 +21,78 @@ public class BlogController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public IActionResult GetBlog(int id)
+    public async Task<IActionResult> GetBlog(int id)
     {
-        Blog blog = _blogService.Blog(id);
+        BlogResultViewModels blogResult = await _blogService.BlogAsync(id);
 
-        if (blog is null) return NotFound("Blog no encontrado");
+        if (blogNotExist(blogResult.BlogState)) return NotFound("Blog inexistente");
 
-        return Ok(blog);
+        return Ok(blogResult.Blog);
     }
 
     [HttpGet]
-    public IActionResult GetBlogs()
+    public async Task<IActionResult> GetBlogs()
     {
-        var blogs = _blogService.Blogs();
+        var blogs = await _blogService.BlogsAsync();
         return Ok(blogs);
     }
 
     [HttpPost]
-    public IActionResult Create([FromBody] BlogViewModels blog)
+    public async Task<IActionResult> Create([FromBody] BlogViewModels blog_vm)
     {
         if (!ModelState.IsValid) return BadRequest("Faltan datos");
 
-        if (!_blogService.Create(blog)) return BadRequest("Blog existente");
+        var blogState = await _blogService.CreateAsync(blog_vm);
 
-        var blogCreated = _blogService.Blog(blog.Name);
+        if (blogNameInUse(blogState)) return BadRequest("Nombre de blog en uso");
 
-        return Ok(blogCreated);
+        var blogResult = await _blogService.BlogAsync(blog_vm.Name);
+
+        return Ok(blogResult.Blog);
     }
 
+
+
     [HttpPut("{id}")]
-    public IActionResult Update(int id, [FromBody] BlogViewModels blog)
+    public async Task<IActionResult> Update(int id, [FromBody] BlogViewModels blog)
     {
         if (!ModelState.IsValid) return BadRequest("Faltan datos");
-      
-        if (_blogService.Blog(id) is null) return NotFound("Blog no encontrado");
 
-        if(!_blogService.Update(id,blog)) return BadRequest("Ya existe un blog con ese titulo");
+        var blogState = await _blogService.UpdateAsync(id,blog);
+
+        if (blogNotExist(blogState)) return NotFound("Blog inexistente");
+
+        if (blogNameInUse(blogState)) return BadRequest("Ya existe un blog con ese titulo");
 
         return NoContent();
     }
 
     [HttpDelete("{id}")]
-    public IActionResult Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-       bool blogDeleted = _blogService.Delete(id);
+        var blogState = await _blogService.DeleteAsync(id);
 
-       return blogDeleted ? Ok("Blog eliminado") : NotFound("Blog no encontrado");
+        if (blogNotExist(blogState)) return NotFound("Blog inexistente");
+
+        return Ok("Blog eliminado");
     }
 
     [HttpGet("{id}/posts")]
-    public IActionResult GetPosts(int id)
+    public async Task<IActionResult> GetPosts(int id)
     {
-        if (_blogService.Blog(id) is null) return NotFound("Blog no encontrado");
-        var posts = _blogService.PostsByBlog(id);
-        return Ok(posts);
+        var postResultViewModels = await _blogService.PostsByBlogAsync(id);
+
+        if (blogNotExist(postResultViewModels.BlogState)) return NotFound("Blog inexistente");
+
+        return Ok(postResultViewModels.Posts);
     }
 
-
-
-
+    private bool blogNotExist(BlogState blogState)
+    {
+        return blogState == BlogState.NotExist;
+    }
+    private bool blogNameInUse(BlogState blogState)
+    {
+        return blogState == BlogState.NameInUse;
+    } 
 }
