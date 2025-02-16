@@ -1,9 +1,7 @@
-using System.Reflection.Metadata.Ecma335;
-using APIBlog.Models;
 using APIBlog.Services;
 using APIBlog.ViewModels;
+using APIBlog.Shared;
 using Microsoft.AspNetCore.Mvc;
-
 namespace APIBlog.Controllers;
 
 [ApiController]
@@ -12,9 +10,9 @@ public class BlogController : ControllerBase
 {
 
     private readonly ILogger<BlogController> _logger;
-    private readonly BlogService _blogService;
+    private readonly IBlogService _blogService;
 
-    public BlogController(ILogger<BlogController> logger, BlogService blogService)
+    public BlogController(ILogger<BlogController> logger, IBlogService blogService)
     {
         _logger = logger;
         _blogService = blogService;
@@ -23,46 +21,39 @@ public class BlogController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetBlog(int id)
     {
-        BlogResultViewModels blogResult = await _blogService.BlogAsync(id);
+        Result<BlogViewModel> result = await _blogService.BlogAsync(id);
 
-        if (blogNotExist(blogResult.BlogState)) return NotFound("Blog inexistente");
+        if (!result.IsSucces) return NotFound(new { messsage = result.ErrorMessage });
 
-        return Ok(blogResult.Blog);
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> GetBlogs()
-    {
-        var blogs = await _blogService.BlogsAsync();
-        return Ok(blogs);
+        return Ok(result.Value);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] BlogViewModels blog_vm)
+    public async Task<IActionResult> Create([FromBody] BlogRequestViewModel blogRequest)
     {
-        if (!ModelState.IsValid) return BadRequest("Faltan datos");
+        //No hace falta ya que el atributo ApiController hace
+        //al haber un error de validación devolver un Bad request (400)
+        //if (!ModelState.IsValid) return BadRequest("Faltan datos");
 
-        var blogState = await _blogService.CreateAsync(blog_vm);
+        var result = await _blogService.CreateAsync(blogRequest);
 
-        if (blogNameInUse(blogState)) return BadRequest("Nombre de blog en uso");
+        if (!result.IsSucces) return BadRequest(new { message = result.ErrorMessage });
 
-        var blogResult = await _blogService.BlogAsync(blog_vm.Name);
-
-        return Ok(blogResult.Blog);
+        return Ok(result.Value);
     }
 
-
-
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, [FromBody] BlogViewModels blog)
+    public async Task<IActionResult> Update(int id, [FromBody] BlogRequestViewModel blogRequest)
     {
-        if (!ModelState.IsValid) return BadRequest("Faltan datos");
+        //if (!ModelState.IsValid) return BadRequest("Faltan datos");
 
-        var blogState = await _blogService.UpdateAsync(id,blog);
+        Result result = await _blogService.UpdateAsync(id, blogRequest);
 
-        if (blogNotExist(blogState)) return NotFound("Blog inexistente");
-
-        if (blogNameInUse(blogState)) return BadRequest("Ya existe un blog con ese titulo");
+        if (!result.IsSucces)
+        {
+            if (result.State == State.BlogNotExist) return NotFound(new { message = result.ErrorMessage });
+            if (result.State == State.BlogNameInUse) return BadRequest(new { message = result.ErrorMessage });
+        }
 
         return NoContent();
     }
@@ -70,29 +61,34 @@ public class BlogController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var blogState = await _blogService.DeleteAsync(id);
+        Result result = await _blogService.DeleteAsync(id);
 
-        if (blogNotExist(blogState)) return NotFound("Blog inexistente");
+        if (!result.IsSucces) return NotFound(new { message = result.ErrorMessage });
 
-        return Ok("Blog eliminado");
+        return Ok(new { message = result.ErrorMessage });
     }
 
-    [HttpGet("{id}/posts")]
-    public async Task<IActionResult> GetPosts(int id)
+    [HttpGet]
+    public async Task<IActionResult> GetBlogs()
     {
-        var postResultViewModels = await _blogService.PostsByBlogAsync(id);
-
-        if (blogNotExist(postResultViewModels.BlogState)) return NotFound("Blog inexistente");
-
-        return Ok(postResultViewModels.Posts);
+        List<BlogViewModel> blogs = await _blogService.BlogsAsync();
+        return Ok(blogs);
     }
 
-    private bool blogNotExist(BlogState blogState)
+    [HttpGet("{idBlog}/posts")]
+    public async Task<IActionResult> GetPosts(int idBlog)
     {
-        return blogState == BlogState.NotExist;
+        Result<List<PostViewModel>> result = await _blogService.PostsByBlogAsync(idBlog);
+
+        if (!result.IsSucces) return NotFound(new { messagge = result.ErrorMessage });
+
+        return Ok(result.Value);
     }
-    private bool blogNameInUse(BlogState blogState)
-    {
-        return blogState == BlogState.NameInUse;
-    } 
+
+
+
+
+
+
+
 }

@@ -11,6 +11,10 @@ public interface IBlogRepository
     public Task<Blog> GetBlogAsync(string name);
     public Task<List<Blog>> BlogsAsync();
     public Task<List<Post>> PostsByBlogAsync(int id);
+    
     public Task<List<Post>> PostsByBlogAsync(string name);
+    public Task<bool> NameBlogInUse(string name);
+
+    public Task<bool> BlogExists(int id);
 
 }

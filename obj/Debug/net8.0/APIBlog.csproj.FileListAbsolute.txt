@@ -157,3 +157,5 @@ C:\Users\enzo_\OneDrive\Desktop\Taller2\APIBlog\obj\Debug\net8.0\refint\APIBlog.
 C:\Users\enzo_\OneDrive\Desktop\Taller2\APIBlog\obj\Debug\net8.0\APIBlog.pdb
 C:\Users\enzo_\OneDrive\Desktop\Taller2\APIBlog\obj\Debug\net8.0\APIBlog.genruntimeconfig.cache
 C:\Users\enzo_\OneDrive\Desktop\Taller2\APIBlog\obj\Debug\net8.0\ref\APIBlog.dll
+C:\Users\enzo_\OneDrive\Desktop\Taller2\APIBlog\bin\Debug\net8.0\AutoMapper.dll
+C:\Users\enzo_\OneDrive\Desktop\Taller2\APIBlog\bin\Debug\net8.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll

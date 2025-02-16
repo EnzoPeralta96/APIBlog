@@ -1,98 +1,122 @@
 using System.Threading.Tasks;
 using APIBlog.Models;
 using APIBlog.Repository;
+using APIBlog.Shared;
 using APIBlog.ViewModels;
+using AutoMapper;
 
 namespace APIBlog.Services;
-public class BlogService
+public class BlogService : IBlogService
 {
-    private readonly IBlogRepository blogRepository;
-    public BlogService(IBlogRepository blogRepository)
+    private readonly IBlogRepository _blogRepository;
+    private readonly IMapper _mapper;
+    public BlogService(IBlogRepository blogRepository, IMapper mapper)
     {
-        this.blogRepository = blogRepository;
+        _blogRepository = blogRepository;
+        _mapper = mapper;
     }
 
-    public async Task<BlogState> CreateAsync(BlogViewModels blog_vm)
+    public async Task<Result<BlogViewModel>> BlogAsync(int id)
     {
-        var blog = await blogRepository.GetBlogAsync(blog_vm.Name);
+        var blog = await _blogRepository.GetBlogAsync(id);
 
-        if (blog is not null) return BlogState.NameInUse;
+        if (blog is null) return Result<BlogViewModel>.Failure($"El blog con id = {id} no existe");
 
-        await blogRepository.CreateAsync(new Blog(blog_vm));
+        var blogViewModel = _mapper.Map<BlogViewModel>(blog);
 
-        return BlogState.Created;
+        return Result<BlogViewModel>.Succes(blogViewModel);
     }
 
-    public async Task<BlogState> UpdateAsync(int id, BlogViewModels blog_vm)
+    /// <summary>
+    /// Controla la existencia de un blog por su nombre en la db.
+    /// Si no existe, se crea el blog y se guarda en la db
+    /// </summary>
+    /// <param name="blogRequest">Es un viewModel con los datos necesarios para crear un blog</param>
+    /// <returns>
+    ///     En caso de que el blog existe,devuelve un resultado fallido con un mensaje de error.
+    ///     Caso contrario devuelve el blog creado en forma de viewmodel
+    ///  </returns>
+
+    public async Task<Result<BlogViewModel>> CreateAsync(BlogRequestViewModel blogRequest)
     {
-        var blog = await blogRepository.GetBlogAsync(id);
+        //Controlo si no hay un blog con el mismo nombre
+        bool nameBlogInUse = await _blogRepository.NameBlogInUse(blogRequest.Name);
 
-        if (blog is null) return BlogState.NotExist;
+        if (nameBlogInUse) return Result<BlogViewModel>.Failure("El blog ya existe");
 
-        var existing_blog = await blogRepository.GetBlogAsync(blog_vm.Name);
+        var blog = _mapper.Map<Blog>(blogRequest);
 
-        if (blogNameInUse(id, existing_blog)) return BlogState.NameInUse;
+        await _blogRepository.CreateAsync(blog);
 
-        await blogRepository.UpdateAsync(id, new Blog(blog_vm));
+        /*
+        Una vez que se crea el post, EF hace un seguimiento de blog
+        por lo que luego de crearlo, ya tiene su id
+        */
+        var blogViewModels = _mapper.Map<BlogViewModel>(blog);
 
-        return BlogState.Updated;
+        return Result<BlogViewModel>.Succes(blogViewModels);
     }
 
-    public async Task<BlogState> DeleteAsync(int id)
+
+    /*
+        En este caso devuelvo el estado del fallo, para poder devolver 
+        el código correspondiente en el controller
+    */
+
+    public async Task<Result> UpdateAsync(int id, BlogRequestViewModel blogRequest)
     {
-        var blog = await blogRepository.GetBlogAsync(id);
+        bool blogExists = await _blogRepository.BlogExists(id);
 
-        if (blog is null) return BlogState.NotExist;
+        if (!blogExists) return Result.Failure("El blog no existe", State.BlogNotExist);
 
-        await blogRepository.DeleteAsync(id);
+        var existingBlog = await _blogRepository.GetBlogAsync(blogRequest.Name);
 
-        return BlogState.Deleted;
-    }
-    public async Task<BlogResultViewModels> BlogAsync(int id)
-    {
-        var blog = await blogRepository.GetBlogAsync(id);
+        if (existingBlog is not null && existingBlog.Id != id) return Result.Failure("Nombre de blog en uso", State.BlogNameInUse);
 
-        if (blog is null) return new BlogResultViewModels(BlogState.NotExist);
+        var blog = _mapper.Map<Blog>(blogRequest);
 
-        return new BlogResultViewModels(BlogState.Existing, blog);
-    }
-    public async Task<BlogResultViewModels> BlogAsync(string name)
-    {
-        var blog = await blogRepository.GetBlogAsync(name);
+        await _blogRepository.UpdateAsync(id, blog);
 
-        if (blog is null) return new BlogResultViewModels(BlogState.NotExist);
-
-        return new BlogResultViewModels(BlogState.Existing, blog);
-    }
-    public async Task<List<Blog>> BlogsAsync()
-    {
-        return await blogRepository.BlogsAsync();
-    }
-    public async Task<PostResultViewModels> PostsByBlogAsync(int id)
-    {
-        var blog = await blogRepository.GetBlogAsync(id);
-
-        if (blog is null) return new PostResultViewModels(BlogState.NotExist);
-
-        var posts = await blogRepository.PostsByBlogAsync(id);
-
-        return new PostResultViewModels(BlogState.Existing, posts);
-    }
-    public async Task<PostResultViewModels> PostsByBlogAsync(string name)
-    {
-        var blog = await blogRepository.GetBlogAsync(name);
-
-        if (blog is null) return new PostResultViewModels(BlogState.NotExist);
-
-        var posts = await blogRepository.PostsByBlogAsync(name);
-
-        return new PostResultViewModels(BlogState.Existing, posts);
-    }
-    private  bool blogNameInUse(int id, Blog? existing_blog)
-    {
-        return existing_blog is not null && existing_blog.Id != id;
+        return Result.Succes();
     }
 
-   
+    public async Task<Result> DeleteAsync(int id)
+    {
+        bool blogExists = await _blogRepository.BlogExists(id);
+
+        if (!blogExists) return Result.Failure($"El Blog con id = {id} no existe");
+
+        await _blogRepository.DeleteAsync(id);
+
+        return Result.Succes("Blog eliminado con éxito");
+    }
+
+    public async Task<List<BlogViewModel>> BlogsAsync()
+    {
+        var blogs = await _blogRepository.BlogsAsync();
+
+        var blogsViewModel = _mapper.Map<List<BlogViewModel>>(blogs);
+
+        return blogsViewModel;
+    }
+
+    public async Task<Result<List<PostViewModel>>> PostsByBlogAsync(int id)
+    {
+        bool blogExists = await _blogRepository.BlogExists(id);
+
+        if (!blogExists) return Result<List<PostViewModel>>.Failure($"El Blog con id = {id} no existe");
+
+        List <Post> posts = await _blogRepository.PostsByBlogAsync(id);
+
+        var postView = _mapper.Map<List<PostViewModel>>(posts);
+
+        return Result<List<PostViewModel>>.Succes(postView);
+    }
+
+
+
+
+
+
 
 }

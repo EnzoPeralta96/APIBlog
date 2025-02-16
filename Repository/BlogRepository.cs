@@ -17,6 +17,7 @@ public class BlogRepository : IBlogRepository
 
     public async Task CreateAsync(Blog blog)
     {
+
         await _blogDbContext.Blogs.AddAsync(blog);
         await _blogDbContext.SaveChangesAsync();
     }
@@ -39,6 +40,8 @@ public class BlogRepository : IBlogRepository
     {
         var blog = await _blogDbContext.Blogs
                         .AsNoTracking()
+                        .Include(bl => bl.Posts)
+                            .ThenInclude(ps => ps.Reaction)
                         .FirstOrDefaultAsync(bl => bl.Id == id);
         return blog;
     }
@@ -47,6 +50,8 @@ public class BlogRepository : IBlogRepository
     {
         var blog = await _blogDbContext.Blogs
                         .AsNoTracking()
+                        .Include(bl => bl.Posts)
+                            .ThenInclude(ps => ps.Reaction)
                         .FirstOrDefaultAsync(bl => bl.Name == name);
         return blog;
     }
@@ -55,13 +60,18 @@ public class BlogRepository : IBlogRepository
     {
         var blogs = await _blogDbContext.Blogs
                     .AsNoTracking()
+                    .Include(bl => bl.Posts)
+                        .ThenInclude(ps => ps.Reaction)
                     .ToListAsync();
         return blogs;
     }
+
+
     public async Task<List<Post>> PostsByBlogAsync(int id)
     {
         var posts = await _blogDbContext.Posts
                         .Where(p => p.BlogId == id)
+                        .Include(ps => ps.Reaction)
                         .AsNoTracking()
                         .ToListAsync();
         return posts;
@@ -71,9 +81,25 @@ public class BlogRepository : IBlogRepository
     {
         var posts = await _blogDbContext.Posts
                     .Where(p => p.Blog.Name == name)
+                    .Include(ps => ps.Reaction)
                     .AsNoTracking()
                     .ToListAsync();
         return posts;
+    }
+
+    public async Task<bool> NameBlogInUse(string name)
+    {
+        return await _blogDbContext.Blogs
+                    .AsNoTracking()
+                    .AnyAsync(bl => bl.Name == name);
+
+    }
+
+    public async Task<bool> BlogExists(int id)
+    {
+        return await _blogDbContext.Blogs
+                        .AsNoTracking()
+                        .AnyAsync(bl => bl.Id == id);
     }
 
 }
