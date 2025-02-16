@@ -23,8 +23,16 @@ public class BlogController : ControllerBase
     {
         Result<BlogViewModel> result = await _blogService.BlogAsync(id);
 
-        if (!result.IsSucces) return NotFound(new { messsage = result.ErrorMessage });
-
+        if (!result.IsSucces)
+        {
+            return result.State switch
+            {
+                State.NotExist => NotFound(new { message = result.ErrorMessage }),
+                State.InternalServerError => StatusCode(500, result.ErrorMessage),
+                _ => BadRequest(new { message = result.ErrorMessage })
+            };
+        }
+        
         return Ok(result.Value);
     }
 
@@ -37,22 +45,33 @@ public class BlogController : ControllerBase
 
         var result = await _blogService.CreateAsync(blogRequest);
 
-        if (!result.IsSucces) return BadRequest(new { message = result.ErrorMessage });
+        if (!result.IsSucces)
+        {
+            return result.State switch
+            {
+                State.NameInUse => BadRequest(new { message = result.ErrorMessage }),
+                State.InternalServerError => StatusCode(500, result.ErrorMessage),
+                _ => BadRequest(new { message = result.ErrorMessage })
 
+            };
+        }
         return Ok(result.Value);
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, [FromBody] BlogRequestViewModel blogRequest)
     {
-        //if (!ModelState.IsValid) return BadRequest("Faltan datos");
-
         Result result = await _blogService.UpdateAsync(id, blogRequest);
 
         if (!result.IsSucces)
         {
-            if (result.State == State.BlogNotExist) return NotFound(new { message = result.ErrorMessage });
-            if (result.State == State.BlogNameInUse) return BadRequest(new { message = result.ErrorMessage });
+            return result.State switch
+            {
+                State.NotExist => NotFound(new { message = result.ErrorMessage }),
+                State.NameInUse => BadRequest(new { message = result.ErrorMessage }),
+                State.InternalServerError => StatusCode(500, result.ErrorMessage),
+                _ => BadRequest(new { message = result.ErrorMessage })
+            };
         }
 
         return NoContent();
@@ -63,7 +82,15 @@ public class BlogController : ControllerBase
     {
         Result result = await _blogService.DeleteAsync(id);
 
-        if (!result.IsSucces) return NotFound(new { message = result.ErrorMessage });
+        if (!result.IsSucces)
+        {
+            return result.State switch
+            {
+                State.NotExist => NotFound(new { message = result.ErrorMessage }),
+                State.InternalServerError => StatusCode(500, result.ErrorMessage),
+                _ => BadRequest(new { message = result.ErrorMessage })
+            };
+        }
 
         return Ok(new { message = result.ErrorMessage });
     }
@@ -71,8 +98,18 @@ public class BlogController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetBlogs()
     {
-        List<BlogViewModel> blogs = await _blogService.BlogsAsync();
-        return Ok(blogs);
+        Result<List<BlogViewModel>> result = await _blogService.BlogsAsync();
+
+        if (!result.IsSucces)
+        {
+            return result.State switch
+            {
+                State.InternalServerError => StatusCode(500, result.ErrorMessage),
+                _ => BadRequest(new { message = result.ErrorMessage })
+            };
+        }
+
+        return Ok(result.Value);
     }
 
     [HttpGet("{idBlog}/posts")]
@@ -80,8 +117,16 @@ public class BlogController : ControllerBase
     {
         Result<List<PostViewModel>> result = await _blogService.PostsByBlogAsync(idBlog);
 
-        if (!result.IsSucces) return NotFound(new { messagge = result.ErrorMessage });
-
+        if (!result.IsSucces)
+        {
+            return result.State switch
+            {
+                State.NotExist => NotFound(new { message = result.ErrorMessage }),
+                State.InternalServerError => StatusCode(500, result.ErrorMessage),
+                _ => BadRequest(new { message = result.ErrorMessage })
+            };
+        }
+        
         return Ok(result.Value);
     }
 

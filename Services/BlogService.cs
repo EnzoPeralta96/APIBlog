@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using APIBlog.Models;
 using APIBlog.Repository;
 using APIBlog.Shared;
@@ -18,13 +17,20 @@ public class BlogService : IBlogService
 
     public async Task<Result<BlogViewModel>> BlogAsync(int id)
     {
-        var blog = await _blogRepository.GetBlogAsync(id);
+        try
+        {
+            var blog = await _blogRepository.GetBlogAsync(id);
 
-        if (blog is null) return Result<BlogViewModel>.Failure($"El blog con id = {id} no existe");
+            if (blog is null) return Result<BlogViewModel>.Failure($"El blog con id = {id} no existe", State.NotExist);
 
-        var blogViewModel = _mapper.Map<BlogViewModel>(blog);
+            var blogViewModel = _mapper.Map<BlogViewModel>(blog);
 
-        return Result<BlogViewModel>.Succes(blogViewModel);
+            return Result<BlogViewModel>.Succes(blogViewModel);
+        }
+        catch (Exception ex)
+        {
+            return Result<BlogViewModel>.Failure($"Error: {ex.Message}", State.InternalServerError);
+        }
     }
 
     /// <summary>
@@ -39,22 +45,30 @@ public class BlogService : IBlogService
 
     public async Task<Result<BlogViewModel>> CreateAsync(BlogRequestViewModel blogRequest)
     {
+        try
+        {
+            bool nameBlogInUse = await _blogRepository.NameBlogInUse(blogRequest.Name);
+
+            if (nameBlogInUse) return Result<BlogViewModel>.Failure("El blog ya existe", State.NameInUse);
+
+            var blog = _mapper.Map<Blog>(blogRequest);
+
+            await _blogRepository.CreateAsync(blog);
+
+            /*
+            Una vez que se crea el post, EF hace un seguimiento de blog
+            por lo que luego de crearlo, ya tiene su id
+            */
+            var blogViewModels = _mapper.Map<BlogViewModel>(blog);
+
+            return Result<BlogViewModel>.Succes(blogViewModels);
+        }
+        catch (Exception ex)
+        {
+            return Result<BlogViewModel>.Failure($"Error: {ex.Message}", State.InternalServerError);
+        }
         //Controlo si no hay un blog con el mismo nombre
-        bool nameBlogInUse = await _blogRepository.NameBlogInUse(blogRequest.Name);
 
-        if (nameBlogInUse) return Result<BlogViewModel>.Failure("El blog ya existe");
-
-        var blog = _mapper.Map<Blog>(blogRequest);
-
-        await _blogRepository.CreateAsync(blog);
-
-        /*
-        Una vez que se crea el post, EF hace un seguimiento de blog
-        por lo que luego de crearlo, ya tiene su id
-        */
-        var blogViewModels = _mapper.Map<BlogViewModel>(blog);
-
-        return Result<BlogViewModel>.Succes(blogViewModels);
     }
 
 
@@ -65,52 +79,83 @@ public class BlogService : IBlogService
 
     public async Task<Result> UpdateAsync(int id, BlogRequestViewModel blogRequest)
     {
-        bool blogExists = await _blogRepository.BlogExists(id);
+        try
+        {
+            bool blogExists = await _blogRepository.BlogExists(id);
 
-        if (!blogExists) return Result.Failure("El blog no existe", State.BlogNotExist);
+            if (!blogExists) return Result.Failure("El blog no existe", State.NotExist);
 
-        var existingBlog = await _blogRepository.GetBlogAsync(blogRequest.Name);
+            var existingBlog = await _blogRepository.GetBlogAsync(blogRequest.Name);
 
-        if (existingBlog is not null && existingBlog.Id != id) return Result.Failure("Nombre de blog en uso", State.BlogNameInUse);
+            if (existingBlog is not null && existingBlog.Id != id) return Result.Failure("Nombre de blog en uso", State.NameInUse);
 
-        var blog = _mapper.Map<Blog>(blogRequest);
+            var blog = _mapper.Map<Blog>(blogRequest);
 
-        await _blogRepository.UpdateAsync(id, blog);
+            await _blogRepository.UpdateAsync(id, blog);
 
-        return Result.Succes();
+            return Result.Succes();
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure($"Error: {ex.Message}", State.InternalServerError);
+        }
+
     }
 
     public async Task<Result> DeleteAsync(int id)
     {
-        bool blogExists = await _blogRepository.BlogExists(id);
+        try
+        {
+            bool blogExists = await _blogRepository.BlogExists(id);
 
-        if (!blogExists) return Result.Failure($"El Blog con id = {id} no existe");
+            if (!blogExists) return Result.Failure($"El Blog con id = {id} no existe",State.NotExist);
 
-        await _blogRepository.DeleteAsync(id);
+            await _blogRepository.DeleteAsync(id);
 
-        return Result.Succes("Blog eliminado con éxito");
+            return Result.Succes("Blog eliminado con éxito");
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure($"Error: {ex.Message}", State.InternalServerError);
+        }
+
     }
 
-    public async Task<List<BlogViewModel>> BlogsAsync()
+    public async Task<Result<List<BlogViewModel>>> BlogsAsync()
     {
-        var blogs = await _blogRepository.BlogsAsync();
+        try
+        {
+            var blogs = await _blogRepository.BlogsAsync();
 
-        var blogsViewModel = _mapper.Map<List<BlogViewModel>>(blogs);
+            var blogsViewModel = _mapper.Map<List<BlogViewModel>>(blogs);
 
-        return blogsViewModel;
+            return Result<List<BlogViewModel>>.Succes(blogsViewModel);
+        }
+        catch (Exception ex)
+        {
+            return Result<List<BlogViewModel>>.Failure($"Error: {ex.Message}", State.InternalServerError);
+        }
     }
 
     public async Task<Result<List<PostViewModel>>> PostsByBlogAsync(int id)
     {
-        bool blogExists = await _blogRepository.BlogExists(id);
+        try
+        {
+            bool blogExists = await _blogRepository.BlogExists(id);
 
-        if (!blogExists) return Result<List<PostViewModel>>.Failure($"El Blog con id = {id} no existe");
+            if (!blogExists) return Result<List<PostViewModel>>.Failure($"El Blog con id = {id} no existe", State.NotExist);
 
-        List <Post> posts = await _blogRepository.PostsByBlogAsync(id);
+            List<Post> posts = await _blogRepository.PostsByBlogAsync(id);
 
-        var postView = _mapper.Map<List<PostViewModel>>(posts);
+            var postView = _mapper.Map<List<PostViewModel>>(posts);
 
-        return Result<List<PostViewModel>>.Succes(postView);
+            return Result<List<PostViewModel>>.Succes(postView);
+        }
+        catch (Exception ex)
+        {
+            return Result<List<PostViewModel>>.Failure($"Error: {ex.Message}", State.InternalServerError);
+        }
+
     }
 
 

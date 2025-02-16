@@ -1,6 +1,3 @@
-using System.Text.Json.Serialization;
-using APIBlog.ViewModels;
-
 namespace APIBlog.Models;
 
 public class Post

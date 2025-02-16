@@ -1,4 +1,3 @@
-using APIBlog.ViewModels;
 namespace APIBlog.Models;
 
 public class Blog

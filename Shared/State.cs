@@ -1,11 +1,12 @@
 namespace APIBlog.Shared;
 public enum State
 {
+    Default,
     Created,
     Updated,
     Deleted,
-    BlogExisting,
-    BlogNotExist,
-    BlogNameInUse,
-    PostNotExist
+    Exists,
+    NotExist,
+    NameInUse,
+    InternalServerError
 }
