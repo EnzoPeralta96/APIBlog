@@ -37,36 +37,28 @@ public class PostRepository:IPostRepository
     {
         var post = await _blogDbContext.Posts
                         .AsNoTracking()
+                        .Include(r => r.Reaction)
                         .FirstOrDefaultAsync(p => p.Id == id);
         return post;
     }
 
-    public async Task<Post> GetPostWhitReactionAsync(int id)
-    {
-        var post = await _blogDbContext.Posts
-                        .AsNoTracking()
-                        .Include(ps => ps.Reaction)
-                        .FirstOrDefaultAsync(p => p.Id == id);
-        return post;
-    }
-
-    public async Task<Post> GetLastPostAsync()
+    /*public async Task<Post> GetLastPostAsync()
     {
         var post = await _blogDbContext.Posts
                         .AsNoTracking()
                         .OrderByDescending(pt => pt.Id)
                         .FirstOrDefaultAsync();
         return post;
-    }
+    }*/
 
-    public async Task ReactPostAsync(int id)
+    public async Task LikeAsync(int id)
     {
         var post = await _blogDbContext.Posts.FindAsync(id);
         post.Reaction.NumberOfLikes++;
         await _blogDbContext.SaveChangesAsync();
     }
 
-    public async Task ReadPostAsync(int id)
+    public async Task ReadAsync(int id)
     {
         var post = await _blogDbContext.Posts.FindAsync(id);
         post.Reaction.NumberOfReading++;

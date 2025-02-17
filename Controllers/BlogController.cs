@@ -92,7 +92,7 @@ public class BlogController : ControllerBase
             };
         }
 
-        return Ok(new { message = result.ErrorMessage });
+        return Ok(new { message = result.SuccesMessage });
     }
 
     [HttpGet]

@@ -65,7 +65,7 @@ public class BlogService : IBlogService
         }
         catch (Exception ex)
         {
-            return Result<BlogViewModel>.Failure($"Error: {ex.Message}", State.InternalServerError);
+            return Result<BlogViewModel>.Failure($"Error inesperado: {ex.Message}", State.InternalServerError);
         }
         //Controlo si no hay un blog con el mismo nombre
 

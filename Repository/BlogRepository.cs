@@ -21,18 +21,36 @@ public class BlogRepository : IBlogRepository
         await _blogDbContext.SaveChangesAsync();
     }
 
-    public async Task UpdateAsync(int id, Blog blog)
+    /*public async Task UpdateAsync(int id, Blog blog)
     {
         var searched_blog = await _blogDbContext.Blogs.FindAsync(id);
         searched_blog.Name = blog.Name;
         searched_blog.Description = blog.Description;
         await _blogDbContext.SaveChangesAsync();
+    }*/
+
+    public async Task UpdateAsync(int id, Blog blog)
+    {
+        var postUpdate  = new Blog{Id = id, Name = blog.Name, Description = blog.Description};
+        _blogDbContext.Blogs.Attach(postUpdate);
+        _blogDbContext.Entry(postUpdate).Property(bl => bl.Name).IsModified = true;
+        _blogDbContext.Entry(postUpdate).Property(bl => bl.Description).IsModified = true;
+        await _blogDbContext.SaveChangesAsync();
     }
+
+
+    /* public async Task DeleteAsync(int id)
+     {
+         var searched_blog = await _blogDbContext.Blogs.FindAsync(id);
+         _blogDbContext.Blogs.Remove(searched_blog);
+         await _blogDbContext.SaveChangesAsync();
+     }*/
 
     public async Task DeleteAsync(int id)
     {
-        var searched_blog = await _blogDbContext.Blogs.FindAsync(id);
-        _blogDbContext.Blogs.Remove(searched_blog);
+        var blogToDelete = new Blog { Id = id };
+        _blogDbContext.Blogs.Attach(blogToDelete);
+        _blogDbContext.Blogs.Remove(blogToDelete);
         await _blogDbContext.SaveChangesAsync();
     }
     public async Task<Blog> GetBlogAsync(int id)
