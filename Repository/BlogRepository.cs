@@ -1,58 +1,15 @@
 using APIBlog.Data;
 using APIBlog.Models;
 using Microsoft.EntityFrameworkCore;
-
-
 namespace APIBlog.Repository;
-
 public class BlogRepository : IBlogRepository
 {
     private readonly BlogDbContext _blogDbContext;
-
     public BlogRepository(BlogDbContext blogDb)
     {
         _blogDbContext = blogDb;
     }
 
-    public async Task CreateAsync(Blog blog)
-    {
-
-        await _blogDbContext.Blogs.AddAsync(blog);
-        await _blogDbContext.SaveChangesAsync();
-    }
-
-    /*public async Task UpdateAsync(int id, Blog blog)
-    {
-        var searched_blog = await _blogDbContext.Blogs.FindAsync(id);
-        searched_blog.Name = blog.Name;
-        searched_blog.Description = blog.Description;
-        await _blogDbContext.SaveChangesAsync();
-    }*/
-
-    public async Task UpdateAsync(int id, Blog blog)
-    {
-        var postUpdate  = new Blog{Id = id, Name = blog.Name, Description = blog.Description};
-        _blogDbContext.Blogs.Attach(postUpdate);
-        _blogDbContext.Entry(postUpdate).Property(bl => bl.Name).IsModified = true;
-        _blogDbContext.Entry(postUpdate).Property(bl => bl.Description).IsModified = true;
-        await _blogDbContext.SaveChangesAsync();
-    }
-
-
-    /* public async Task DeleteAsync(int id)
-     {
-         var searched_blog = await _blogDbContext.Blogs.FindAsync(id);
-         _blogDbContext.Blogs.Remove(searched_blog);
-         await _blogDbContext.SaveChangesAsync();
-     }*/
-
-    public async Task DeleteAsync(int id)
-    {
-        var blogToDelete = new Blog { Id = id };
-        _blogDbContext.Blogs.Attach(blogToDelete);
-        _blogDbContext.Blogs.Remove(blogToDelete);
-        await _blogDbContext.SaveChangesAsync();
-    }
     public async Task<Blog> GetBlogAsync(int id)
     {
         var blog = await _blogDbContext.Blogs
@@ -63,6 +20,30 @@ public class BlogRepository : IBlogRepository
         return blog;
     }
 
+    public async Task CreateAsync(Blog blog)
+    {
+
+        await _blogDbContext.Blogs.AddAsync(blog);
+        await _blogDbContext.SaveChangesAsync();
+    }
+
+    public async Task UpdateAsync(int id, Blog blog)
+    {
+        var postUpdate = new Blog { Id = id, Name = blog.Name, Description = blog.Description };
+        _blogDbContext.Blogs.Attach(postUpdate);
+        _blogDbContext.Entry(postUpdate).Property(bl => bl.Name).IsModified = true;
+        _blogDbContext.Entry(postUpdate).Property(bl => bl.Description).IsModified = true;
+        await _blogDbContext.SaveChangesAsync();
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        var blogToDelete = new Blog { Id = id };
+        _blogDbContext.Blogs.Attach(blogToDelete);
+        _blogDbContext.Blogs.Remove(blogToDelete);
+        await _blogDbContext.SaveChangesAsync();
+    }
+    
     public async Task<Blog> GetBlogAsync(string name)
     {
         var blog = await _blogDbContext.Blogs
@@ -104,7 +85,7 @@ public class BlogRepository : IBlogRepository
         return posts;
     }
 
-    public async Task<bool> NameBlogInUse(string name)
+    public async Task<bool> NameInUseAsync(string name)
     {
         return await _blogDbContext.Blogs
                     .AsNoTracking()
@@ -112,12 +93,27 @@ public class BlogRepository : IBlogRepository
 
     }
 
-    public async Task<bool> BlogExists(int id)
+    public async Task<bool> ExistsAsync(int id)
     {
         return await _blogDbContext.Blogs
                         .AsNoTracking()
                         .AnyAsync(bl => bl.Id == id);
     }
+
+    /*public async Task UpdateAsync(int id, Blog blog)
+    {
+        var searched_blog = await _blogDbContext.Blogs.FindAsync(id);
+        searched_blog.Name = blog.Name;
+        searched_blog.Description = blog.Description;
+        await _blogDbContext.SaveChangesAsync();
+    }*/
+
+    /* public async Task DeleteAsync(int id)
+     {
+         var searched_blog = await _blogDbContext.Blogs.FindAsync(id);
+         _blogDbContext.Blogs.Remove(searched_blog);
+         await _blogDbContext.SaveChangesAsync();
+     }*/
 
 }
 

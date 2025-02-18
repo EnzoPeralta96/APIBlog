@@ -15,6 +15,7 @@ builder.Services.AddScoped<IBlogRepository, BlogRepository>();
 builder.Services.AddScoped<IPostRepository, PostRepository>();
 builder.Services.AddScoped<IReactionRepostiroy, ReactionRepository>();
 builder.Services.AddScoped<IBlogService, BlogService>();
+builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<PostService, PostService>();
 
 

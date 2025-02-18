@@ -2,38 +2,118 @@ using APIBlog.Models;
 using APIBlog.Repository;
 using APIBlog.Shared;
 using APIBlog.ViewModels;
+using AutoMapper;
 
 namespace APIBlog.Services;
-public class PostService
+public class PostService : IPostService
 {
     private readonly IPostRepository _postRepository;
     private readonly IBlogRepository _blogRepository;
-
     private readonly IReactionRepostiroy _reactionRepository;
-
-    public PostService(IPostRepository postRepository, IBlogRepository blogRepository,IReactionRepostiroy reactionRepository)
+    private readonly IMapper _mapper;
+    public PostService(IPostRepository postRepository, IBlogRepository blogRepository, IReactionRepostiroy reactionRepository, IMapper mapper)
     {
         _postRepository = postRepository;
         _blogRepository = blogRepository;
         _reactionRepository = reactionRepository;
+        _mapper = mapper;
     }
 
-   /* public async Task<PostResultViewModels> CreateAsync(CreatePostViewModels post_vm)
+    public async Task<Result<PostViewModel>> GetPostAsync(int id)
     {
-        var blog = await _blogRepository.GetBlogAsync(post_vm.BlogId);
-        if (blog is null) return new PostResultViewModels(State.BlogNotExist);
+        try
+        {
+            bool postExists = await _postRepository.ExistsAsync(id);
 
-        var partialPost = new Post(post_vm);
-        await _postRepository.CreateAsync(partialPost);
+            if (!postExists) return Result<PostViewModel>.Failure($"El post con id = {id} no existe", State.NotExist);
 
-        var post = await _postRepository.GetLastPostAsync();
-        await _reactionRepository.CreateAsync(post.Id);
+            await _reactionRepository.ViewsAsync(id);
 
-        var postWhitReactions = await _postRepository.GetPostWhitReactionAsync(post.Id);
-        
-        return new PostResultViewModels(State.BlogExisting,null,postWhitReactions);
-    }*/
-  
+            var post = await _postRepository.GetPostAsync(id);
+
+            var postViewModel = _mapper.Map<PostViewModel>(post);
+
+            return Result<PostViewModel>.Succes(postViewModel);
+        }
+        catch (Exception ex)
+        {
+            return Result<PostViewModel>.Failure($"Error: {ex.Message}", State.InternalServerError);
+        }
+    }
+
+    public async Task<Result<PostViewModel>> CreateAsync(int idBlog, PostRequestViewModel postRequest)
+    {
+        try
+        {
+            bool blogExists = await _blogRepository.ExistsAsync(idBlog);
+
+            if (!blogExists) return Result<PostViewModel>.Failure($"El blog id = {idBlog} no existe", State.NotExist);
+
+            var post = _mapper.Map<Post>(postRequest, opt => opt.Items["BlogId"] = idBlog);
+
+            await _postRepository.CreateAsync(post);
+
+            var reaction = new Reaction(post.Id);
+            await _reactionRepository.CreateAsync(reaction);
+
+            post.Reaction = reaction;
+
+            var postViewModel = _mapper.Map<PostViewModel>(post);
+
+            return Result<PostViewModel>.Succes(postViewModel);
+        }
+        catch (Exception ex)
+        {
+            return Result<PostViewModel>.Failure($"Error: {ex.Message}", State.InternalServerError);
+        }
+    }
+
+    public async Task<Result> UpdateAsync(int id, PostRequestViewModel postRequest)
+    {
+        try
+        {
+            bool postExists = await _postRepository.ExistsAsync(id);
+            if (!postExists) return Result.Failure($"El post con id = {id} no existe", State.NotExist);
+            
+            var post = _mapper.Map<Post>(postRequest);
+            await _postRepository.UpdateAsync(id, post);
+            return Result.Succes();
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure($"Error: {ex.Message}", State.InternalServerError);
+        }
+    }
+
+    public async Task<Result> DeleteAsync(int id)
+    {
+        try
+        {
+            bool postExists = await _postRepository.ExistsAsync(id);
+            if (!postExists) return Result.Failure($"El post con id = {id} no existe", State.NotExist);
+            await _postRepository.DeleteAsync(id);
+            return Result.Succes("Post eliminado con éxito");
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure($"Error: {ex.Message}", State.InternalServerError);
+        }
+    }
+
+    public async Task<Result> LikeAsync(int postId)
+    {
+        try
+        {
+            bool postExists = await _postRepository.ExistsAsync(postId);
+            if (!postExists) return Result.Failure($"El post con id = {postId} no existe", State.NotExist);
+            await _reactionRepository.ILikeAsync(postId);
+            return Result.Succes();
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure($"Error: {ex.Message}", State.InternalServerError);
+        }
+    }
 }
 
 /*

@@ -10,12 +10,12 @@ public class ReactionRepository : IReactionRepostiroy
     {
         _blogDbContext = blogDbContext;
     }
-   /* public async Task CreateAsync(int postId)
+
+    public async Task CreateAsync(Reaction reaction)
     {
-        Reaction reaction = new Reaction(postId);
         await _blogDbContext.Reactions.AddAsync(reaction);
         await _blogDbContext.SaveChangesAsync();
-    }*/
+    }
 
     //public async Task UpdateAsync(int PostId){}
     //public async Task DeleteAsync(int PostId){}
@@ -27,23 +27,34 @@ public class ReactionRepository : IReactionRepostiroy
                             .FirstOrDefaultAsync(r => r.PostId == postId);
         return reaction;
     }
+  
     public async Task ILikeAsync(int id)
     {
-        var reaction = await _blogDbContext.Reactions.FindAsync(id);
-        reaction.NumberOfLikes++;
-        await _blogDbContext.SaveChangesAsync();
+        await _blogDbContext.Reactions
+                .Where(r => r.PostId == id)
+                .ExecuteUpdateAsync( 
+                    s => s.SetProperty(r => r.NumberOfLikes, r => r.NumberOfLikes + 1));
     }
 
     public async Task IdontlikeAsync(int id)
     {
-        var reaction = await _blogDbContext.Reactions.FindAsync(id);
-        reaction.NumberOfLikes--;
-        await _blogDbContext.SaveChangesAsync();
+        await _blogDbContext.Reactions
+                .Where(r => r.PostId == id)
+                .ExecuteUpdateAsync( 
+                    s => s.SetProperty(r => r.NumberOfLikes, r => r.NumberOfLikes - 1));
     }
     public async Task ViewsAsync(int id)
     {
-        var reaction = await _blogDbContext.Reactions.FindAsync(id);
-        reaction.NumberOfReading++;
-        await _blogDbContext.SaveChangesAsync();
+        await _blogDbContext.Reactions
+                .Where(r => r.PostId == id)
+                .ExecuteUpdateAsync( 
+                    s => s.SetProperty(r => r.NumberOfReading, r => r.NumberOfReading + 1));
     }
+
+      /*public async Task ILikeAsync(int id)
+    {
+        var reaction = await _blogDbContext.Reactions.FindAsync(id);
+        reaction.NumberOfLikes++;
+        await _blogDbContext.SaveChangesAsync();
+    }*/
 }

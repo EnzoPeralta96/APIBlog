@@ -6,14 +6,13 @@ namespace APIBlog.Services;
 public interface IBlogService
 {
     Task<Result<BlogViewModel>> BlogAsync(int id);
-    public Task<Result<BlogViewModel>> CreateAsync(BlogRequestViewModel blog_vm);
-    public Task<Result> UpdateAsync(int id, BlogRequestViewModel blog_vm);
-    public Task<Result> DeleteAsync(int id);
-    public Task<Result<List<BlogViewModel>>> BlogsAsync();
+    Task<Result<BlogViewModel>> CreateAsync(BlogRequestViewModel blog_vm);
+    Task<Result> UpdateAsync(int id, BlogRequestViewModel blog_vm);
+    Task<Result> DeleteAsync(int id);
+    Task<Result<List<BlogViewModel>>> BlogsAsync();
+    Task<Result<List<PostViewModel>>> PostsByBlogAsync(int idBlog);
 
-    public Task<Result<List<PostViewModel>>> PostsByBlogAsync(int idBlog);
-
-    //public Task<BlogResultViewModels> BlogAsync(string name);
-    //public Task<PostResultViewModels> PostsByBlogAsync(string name);
+    //Task<BlogResultViewModels> BlogAsync(string name);
+    //Task<PostResultViewModels> PostsByBlogAsync(string name);
 
 }

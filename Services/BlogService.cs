@@ -47,7 +47,7 @@ public class BlogService : IBlogService
     {
         try
         {
-            bool nameBlogInUse = await _blogRepository.NameBlogInUse(blogRequest.Name);
+            bool nameBlogInUse = await _blogRepository.NameInUseAsync(blogRequest.Name);
 
             if (nameBlogInUse) return Result<BlogViewModel>.Failure("El blog ya existe", State.NameInUse);
 
@@ -81,7 +81,7 @@ public class BlogService : IBlogService
     {
         try
         {
-            bool blogExists = await _blogRepository.BlogExists(id);
+            bool blogExists = await _blogRepository.ExistsAsync(id);
 
             if (!blogExists) return Result.Failure("El blog no existe", State.NotExist);
 
@@ -106,7 +106,7 @@ public class BlogService : IBlogService
     {
         try
         {
-            bool blogExists = await _blogRepository.BlogExists(id);
+            bool blogExists = await _blogRepository.ExistsAsync(id);
 
             if (!blogExists) return Result.Failure($"El Blog con id = {id} no existe",State.NotExist);
 
@@ -141,7 +141,7 @@ public class BlogService : IBlogService
     {
         try
         {
-            bool blogExists = await _blogRepository.BlogExists(id);
+            bool blogExists = await _blogRepository.ExistsAsync(id);
 
             if (!blogExists) return Result<List<PostViewModel>>.Failure($"El Blog con id = {id} no existe", State.NotExist);
 
