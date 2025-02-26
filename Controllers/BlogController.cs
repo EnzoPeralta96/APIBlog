@@ -2,10 +2,12 @@ using APIBlog.Services;
 using APIBlog.ViewModels;
 using APIBlog.Shared;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 namespace APIBlog.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class BlogController : ControllerBase
 {
 
@@ -22,7 +24,7 @@ public class BlogController : ControllerBase
     public async Task<IActionResult> GetBlog(int id)
     {
         Result<BlogViewModel> result = await _blogService.BlogAsync(id);
-
+    
         if (!result.IsSucces)
         {
             return result.State switch
@@ -76,7 +78,7 @@ public class BlogController : ControllerBase
 
         return NoContent();
     }
-
+    
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {

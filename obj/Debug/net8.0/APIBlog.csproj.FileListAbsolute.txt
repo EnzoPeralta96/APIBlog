@@ -159,3 +159,13 @@ C:\Users\enzo_\OneDrive\Desktop\Taller2\APIBlog\obj\Debug\net8.0\APIBlog.genrunt
 C:\Users\enzo_\OneDrive\Desktop\Taller2\APIBlog\obj\Debug\net8.0\ref\APIBlog.dll
 C:\Users\enzo_\OneDrive\Desktop\Taller2\APIBlog\bin\Debug\net8.0\AutoMapper.dll
 C:\Users\enzo_\OneDrive\Desktop\Taller2\APIBlog\bin\Debug\net8.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll
+C:\Users\enzo_\OneDrive\Desktop\Taller2\APIBlog\bin\Debug\net8.0\Npgsql.dll
+C:\Users\enzo_\OneDrive\Desktop\Taller2\APIBlog\bin\Debug\net8.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
+C:\Users\enzo_\OneDrive\Desktop\Taller2\APIBlog\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+C:\Users\enzo_\OneDrive\Desktop\Taller2\APIBlog\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
+C:\Users\enzo_\OneDrive\Desktop\Taller2\APIBlog\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
+C:\Users\enzo_\OneDrive\Desktop\Taller2\APIBlog\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
+C:\Users\enzo_\OneDrive\Desktop\Taller2\APIBlog\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
+C:\Users\enzo_\OneDrive\Desktop\Taller2\APIBlog\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+C:\Users\enzo_\OneDrive\Desktop\Taller2\APIBlog\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
+C:\Users\enzo_\OneDrive\Desktop\Taller2\APIBlog\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll

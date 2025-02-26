@@ -1,11 +1,12 @@
-using APIBlog.Models;
 using APIBlog.Services;
 using APIBlog.Shared;
 using APIBlog.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class PostController : ControllerBase
 {
     private readonly ILogger<PostController> _logger;

@@ -49,7 +49,7 @@ public class PostService : IPostService
 
             if (!blogExists) return Result<PostViewModel>.Failure($"El blog id = {idBlog} no existe", State.NotExist);
 
-            var post = _mapper.Map<Post>(postRequest, opt => opt.Items["BlogId"] = idBlog);
+            var post = _mapper.Map<Post>(postRequest, options => options.Items["BlogId"] = idBlog);
 
             await _postRepository.CreateAsync(post);
 

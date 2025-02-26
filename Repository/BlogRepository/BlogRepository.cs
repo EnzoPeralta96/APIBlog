@@ -27,23 +27,27 @@ public class BlogRepository : IBlogRepository
         await _blogDbContext.SaveChangesAsync();
     }
 
+  
+
     public async Task UpdateAsync(int id, Blog blog)
     {
-        var postUpdate = new Blog { Id = id, Name = blog.Name, Description = blog.Description };
-        _blogDbContext.Blogs.Attach(postUpdate);
-        _blogDbContext.Entry(postUpdate).Property(bl => bl.Name).IsModified = true;
-        _blogDbContext.Entry(postUpdate).Property(bl => bl.Description).IsModified = true;
-        await _blogDbContext.SaveChangesAsync();
+        await _blogDbContext.Blogs
+                .Where(bl => bl.Id == id)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(bl => bl.Name, blog.Name)
+                    .SetProperty(bl => bl.Description, blog.Description)
+                );
     }
+
 
     public async Task DeleteAsync(int id)
     {
-        var blogToDelete = new Blog { Id = id };
-        _blogDbContext.Blogs.Attach(blogToDelete);
-        _blogDbContext.Blogs.Remove(blogToDelete);
-        await _blogDbContext.SaveChangesAsync();
+        await _blogDbContext.Blogs
+             .Where(bl => bl.Id == id)
+             .ExecuteDeleteAsync();
     }
-    
+
+
     public async Task<Blog> GetBlogAsync(string name)
     {
         var blog = await _blogDbContext.Blogs
@@ -114,6 +118,23 @@ public class BlogRepository : IBlogRepository
          _blogDbContext.Blogs.Remove(searched_blog);
          await _blogDbContext.SaveChangesAsync();
      }*/
+
+    /*public async Task DeleteAsync(int id)
+{
+   var blogToDelete = new Blog { Id = id };
+   _blogDbContext.Blogs.Attach(blogToDelete);
+   _blogDbContext.Blogs.Remove(blogToDelete);
+   await _blogDbContext.SaveChangesAsync();
+}
+  public async Task UpdateAsync(int id, Blog blog)
+    {
+        var postUpdate = new Blog { Id = id, Name = blog.Name, Description = blog.Description };
+        _blogDbContext.Blogs.Attach(postUpdate);
+        _blogDbContext.Entry(postUpdate).Property(bl => bl.Name).IsModified = true;
+        _blogDbContext.Entry(postUpdate).Property(bl => bl.Description).IsModified = true;
+        await _blogDbContext.SaveChangesAsync();
+    }
+*/
 
 }
 

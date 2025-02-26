@@ -6,6 +6,7 @@ public class MapProfile : Profile
 {
     public MapProfile()
     {
+       
         CreateMap<Blog, BlogViewModel>();
         CreateMap<BlogRequestViewModel, Blog>();
         CreateMap<Post, PostViewModel>();
@@ -23,6 +24,5 @@ public class MapProfile : Profile
                     dest.DateCreate = DateTime.Now;
                 }           
             });
-
     }
 }
