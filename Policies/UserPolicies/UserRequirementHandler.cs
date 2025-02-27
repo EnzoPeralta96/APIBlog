@@ -9,11 +9,16 @@ public class UserRequirementHandler : AuthorizationHandler<UserRequirement>
 {
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, UserRequirement requirement)
     {
-        var userIdClaim = context.User.FindFirst(cl => cl.Type == ClaimTypes.NameIdentifier);
-        if (userIdClaim is null ) return Task.CompletedTask;
 
-        int userIdValue = int.Parse((userIdClaim.Value));
-        if (userIdValue == requirement.UserId)
+        var userIdClaim = context.User.FindFirst(cl => cl.Type == ClaimTypes.NameIdentifier);
+        var userRolClaim = context.User.FindFirst(cl => cl.Type == ClaimTypes.Role);
+
+        if (userIdClaim is null || userRolClaim is null) return Task.CompletedTask;
+
+        bool isOwner = int.Parse((userIdClaim.Value)) == requirement.UserId;
+        bool isAdmin = string.Equals(userRolClaim.Value, "admin", StringComparison.OrdinalIgnoreCase);
+        
+        if (isAdmin || isOwner)
         {
             context.Succeed(requirement);
         }

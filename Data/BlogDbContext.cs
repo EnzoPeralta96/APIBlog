@@ -23,7 +23,6 @@ public class BlogDbContext : DbContext
         modelBuilder.Entity<Post>().ToTable("post");
         modelBuilder.Entity<Comment>().ToTable("comment");
         modelBuilder.Entity<Reaction>().ToTable("reaction");
-    
     }
 
 }

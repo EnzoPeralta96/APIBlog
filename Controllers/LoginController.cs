@@ -1,5 +1,7 @@
+using System.ComponentModel.DataAnnotations;
 using APIBlog.Shared;
 using APIBlog.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -29,6 +31,23 @@ public class LoginController : ControllerBase
             };
         }
         return Ok(new {token = result.Value});
+    }
+
+    [Authorize(Policy = "RequireAdminRole")]
+    [HttpPost("CreateAdmin")]
+    public async Task<IActionResult> AdminRegister([FromBody] UserLoginViewModel userRegister)
+    {
+        Result result = await _loginService.CreateAsync(userRegister,true);
+        if (!result.IsSucces)
+        {
+            return result.State switch
+            {
+                State.NameInUse => BadRequest(new { message = result.ErrorMessage }),
+                State.InternalServerError => StatusCode(500, result.ErrorMessage),
+                _ => BadRequest(new { message = result.ErrorMessage })
+            };
+        }
+        return Ok(new { mesagge = result.SuccesMessage });
     }
 
     [HttpPost("CreateAccount")]

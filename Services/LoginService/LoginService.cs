@@ -19,7 +19,7 @@ public class LoginService : ILoginService
         _mapper = mapper;
     }
 
-    public async Task<Result> CreateAsync(UserLoginViewModel userCreateAccount)
+    public async Task<Result> CreateAsync(UserLoginViewModel userCreateAccount, bool isAmdin = false)
     {
         try
         {
@@ -29,7 +29,9 @@ public class LoginService : ILoginService
 
             userCreateAccount.Password = _security.HashingSHA256(userCreateAccount.Password);
 
-            var user = _mapper.Map<User>(userCreateAccount, options => options.Items["RoleId"] = 2);
+            int roleId = isAmdin ? 1 : 2;
+
+            var user = _mapper.Map<User>(userCreateAccount, options => options.Items["RoleId"] = roleId);
             
             await _userRepository.CreateAsync(user);
 

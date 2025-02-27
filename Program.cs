@@ -45,7 +45,11 @@ builder.Services.AddSwaggerGen(config =>
         });
 });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+    {
+        options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("admin"));
+    }
+);
 
 builder.Services.AddScoped<IAuthorizationHandler, UserRequirementHandler>();
 
