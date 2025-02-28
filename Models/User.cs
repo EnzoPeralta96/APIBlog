@@ -8,4 +8,6 @@ public class User
     public int RoleId { get; set; }
     public Role Role { get; set; }
     public List<Blog> Blogs { get; set; } = new List<Blog>();
+    public List<Post> Posts {get; set;} = new List<Post>();
+    public List<Comment> Comments {get; set;} = new List<Comment>();
 }

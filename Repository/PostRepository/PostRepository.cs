@@ -19,7 +19,6 @@ public class PostRepository : IPostRepository
     {
         var post = await _blogDbContext.Posts
                         .AsNoTracking()
-                        .Include(r => r.Reaction)
                         .FirstOrDefaultAsync(p => p.Id == id);
         return post;
     }
@@ -30,9 +29,9 @@ public class PostRepository : IPostRepository
         await _blogDbContext.SaveChangesAsync();
     }
 
-    public async Task UpdateAsync(int id, Post post)
+    public async Task UpdateAsync(Post post)
     {
-        var postToUpdate = new Post { Id = id, Title = post.Title, Content = post.Content };
+        var postToUpdate = new Post { Id = post.Id, Title = post.Title, Content = post.Content };
         _blogDbContext.Posts.Attach(postToUpdate);
         _blogDbContext.Entry(postToUpdate).Property(p => p.Title).IsModified = true;
         _blogDbContext.Entry(postToUpdate).Property(p => p.Content).IsModified = true;

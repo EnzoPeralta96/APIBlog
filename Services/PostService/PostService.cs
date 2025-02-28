@@ -9,13 +9,11 @@ public class PostService : IPostService
 {
     private readonly IPostRepository _postRepository;
     private readonly IBlogRepository _blogRepository;
-    private readonly IReactionRepostiroy _reactionRepository;
     private readonly IMapper _mapper;
-    public PostService(IPostRepository postRepository, IBlogRepository blogRepository, IReactionRepostiroy reactionRepository, IMapper mapper)
+    public PostService(IPostRepository postRepository, IBlogRepository blogRepository, IMapper mapper)
     {
         _postRepository = postRepository;
         _blogRepository = blogRepository;
-        _reactionRepository = reactionRepository;
         _mapper = mapper;
     }
 
@@ -26,8 +24,6 @@ public class PostService : IPostService
             bool postExists = await _postRepository.ExistsAsync(id);
 
             if (!postExists) return Result<PostViewModel>.Failure($"El post con id = {id} no existe", State.NotExist);
-
-            await _reactionRepository.ViewsAsync(id);
 
             var post = await _postRepository.GetPostAsync(id);
 
@@ -41,22 +37,17 @@ public class PostService : IPostService
         }
     }
 
-    public async Task<Result<PostViewModel>> CreateAsync(int idBlog, PostRequestViewModel postRequest)
+    public async Task<Result<PostViewModel>> CreateAsync(PostCreateViewModel postCreate)
     {
         try
         {
-            bool blogExists = await _blogRepository.ExistsAsync(idBlog);
+            bool blogExists = await _blogRepository.ExistsAsync(postCreate.BlogId);
 
-            if (!blogExists) return Result<PostViewModel>.Failure($"El blog id = {idBlog} no existe", State.NotExist);
+            if (!blogExists) return Result<PostViewModel>.Failure($"El blog id = {postCreate.BlogId} no existe", State.NotExist);
 
-            var post = _mapper.Map<Post>(postRequest, options => options.Items["BlogId"] = idBlog);
+            var post = _mapper.Map<Post>(postCreate);
 
             await _postRepository.CreateAsync(post);
-
-            var reaction = new Reaction(post.Id);
-            await _reactionRepository.CreateAsync(reaction);
-
-            post.Reaction = reaction;
 
             var postViewModel = _mapper.Map<PostViewModel>(post);
 
@@ -68,15 +59,14 @@ public class PostService : IPostService
         }
     }
 
-    public async Task<Result> UpdateAsync(int id, PostRequestViewModel postRequest)
+    public async Task<Result> UpdateAsync(PostUpdateViewModel postUpdate)
     {
         try
         {
-            bool postExists = await _postRepository.ExistsAsync(id);
-            if (!postExists) return Result.Failure($"El post con id = {id} no existe", State.NotExist);
-            
-            var post = _mapper.Map<Post>(postRequest);
-            await _postRepository.UpdateAsync(id, post);
+            bool postExists = await _postRepository.ExistsAsync(postUpdate.PostId);
+            if (!postExists) return Result.Failure($"El post con id = {postUpdate.PostId} no existe", State.NotExist);
+            var post = _mapper.Map<Post>(postUpdate);
+            await _postRepository.UpdateAsync(post);
             return Result.Succes();
         }
         catch (Exception ex)
@@ -100,7 +90,10 @@ public class PostService : IPostService
         }
     }
 
-    public async Task<Result> LikeAsync(int postId)
+}
+
+
+   /* public async Task<Result> LikeAsync(int postId)
     {
         try
         {
@@ -113,8 +106,7 @@ public class PostService : IPostService
         {
             return Result.Failure($"Error: {ex.Message}", State.InternalServerError);
         }
-    }
-}
+    }*/
 
 /*
     public Task CreateAsync(Post post);

@@ -87,4 +87,11 @@ public class UserRepository : IUserRepository
                .Where(u => u.Id != id)
                .AnyAsync(u => u.Name == name);
     }
+    public async Task<bool> IsOwnerBlog(int idUser, int idBlog)
+    {
+        return await _blogDbContext.Blogs
+                        .AsNoTracking()
+                        .Where(bl => bl.Id == idBlog && bl.UserId == idUser)
+                        .AnyAsync();
+    }
 }

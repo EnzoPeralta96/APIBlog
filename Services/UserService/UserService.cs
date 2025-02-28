@@ -36,19 +36,19 @@ public class UserService : IUserService
         }
     }
 
-    public async Task<Result> UpdateAsync(UserUpdateViewModel userRequest)
+    public async Task<Result> UpdateAsync(UserUpdateViewModel userUpdate)
     {
         try
         {
-            bool exists = await _userRepository.ExistsAsync(userRequest.Id);
+            bool exists = await _userRepository.ExistsAsync(userUpdate.Id);
 
-            if (!exists) return Result.Failure($"El usuario con id = {userRequest.Id} no existe", State.NotExist);
+            if (!exists) return Result.Failure($"El usuario con id = {userUpdate.Id} no existe", State.NotExist);
 
-            bool nameInUse = await _userRepository.NameInUseAsync(userRequest.Id, userRequest.Name);
+            bool nameInUse = await _userRepository.NameInUseAsync(userUpdate.Id, userUpdate.Name);
 
-            if(nameInUse) return Result.Failure($"Nombre de usuario: {userRequest.Name} en uso", State.NameInUse);
+            if(nameInUse) return Result.Failure($"Nombre de usuario: {userUpdate.Name} en uso", State.NameInUse);
 
-            var user = _mapper.Map<User>(userRequest);
+            var user = _mapper.Map<User>(userUpdate);
 
             await _userRepository.UpdateAsync(user);
 
@@ -61,19 +61,19 @@ public class UserService : IUserService
 
     }
 
-    public async Task<Result> UpdatePasswordAsync(UserPasswordUpdateViewModel userRequest)
+    public async Task<Result> UpdatePasswordAsync(UserPasswordUpdateViewModel userPasswordUpdate)
     {
         try
         {
-            if (userRequest.Password != userRequest.PasswordRepeat) return Result.Failure("Las contraseñas no coinciden", State.PasswordsDifferents);
+            if (userPasswordUpdate.Password != userPasswordUpdate.PasswordRepeat) return Result.Failure("Las contraseñas no coinciden", State.PasswordsDifferents);
 
-            bool exists = await _userRepository.ExistsAsync(userRequest.Id);
+            bool exists = await _userRepository.ExistsAsync(userPasswordUpdate.Id);
 
-            if (!exists) return Result.Failure($"El usuario con id = {userRequest.Id} no existe", State.NotExist);
+            if (!exists) return Result.Failure($"El usuario con id = {userPasswordUpdate.Id} no existe", State.NotExist);
 
-            userRequest.Password = _securityService.HashingSHA256(userRequest.Password);
+            userPasswordUpdate.Password = _securityService.HashingSHA256(userPasswordUpdate.Password);
 
-            var user = _mapper.Map<User>(userRequest);
+            var user = _mapper.Map<User>(userPasswordUpdate);
 
             await _userRepository.UpdatePasswordAsync(user);
 

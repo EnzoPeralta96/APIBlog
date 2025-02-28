@@ -5,7 +5,7 @@ public interface IPostRepository
 {
     Task<Post> GetPostAsync(int id);
     Task CreateAsync(Post post);
-    Task UpdateAsync(int id, Post post);
+    Task UpdateAsync(Post post);
     Task DeleteAsync(int id);
     Task<bool> ExistsAsync(int id);
 

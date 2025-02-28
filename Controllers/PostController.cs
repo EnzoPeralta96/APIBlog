@@ -10,9 +10,9 @@ using Microsoft.AspNetCore.Mvc;
 public class PostController : ControllerBase
 {
     private readonly ILogger<PostController> _logger;
-    private readonly PostService _postService;
+    private readonly IPostService _postService;
 
-    public PostController(ILogger<PostController> logger, PostService postService)
+    public PostController(ILogger<PostController> logger, IPostService postService)
     {
         _logger = logger;
         _postService = postService;
@@ -34,10 +34,11 @@ public class PostController : ControllerBase
         return Ok(result.Value);
     }
 
-    [HttpPost("{blogId}")]
-    public async Task<IActionResult> Create(int blogId, [FromBody] PostRequestViewModel postRequest)
+    //Lo puede hacer el admin, el ownerBlog u otro user
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] PostCreateViewModel postCreate)
     {
-        Result<PostViewModel> result = await _postService.CreateAsync(blogId, postRequest);
+        Result<PostViewModel> result = await _postService.CreateAsync(postCreate);
         if (!result.IsSucces)
         {
             return result.State switch
@@ -50,10 +51,11 @@ public class PostController : ControllerBase
         return Ok(result.Value);
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, [FromBody] PostRequestViewModel postRequest)
+     //Lo puede hacer el Admin, OwnerPost
+    [HttpPut]
+    public async Task<IActionResult> Update(PostUpdateViewModel postRequest)
     {
-        Result result = await _postService.UpdateAsync(id, postRequest);
+        Result result = await _postService.UpdateAsync(postRequest);
         if (!result.IsSucces)
         {
             return result.State switch
@@ -65,6 +67,8 @@ public class PostController : ControllerBase
         }
         return NoContent();
     }
+
+    //Lo puede hacer el Admin, OwnerBlog u OwnerPost
 
     [HttpDelete("id")]
     public async Task<IActionResult> Delete(int id)
@@ -82,7 +86,7 @@ public class PostController : ControllerBase
         return Ok(new { message = result.SuccesMessage });
     }
 
-    [HttpPut("{id}/like")]
+   /* [HttpPut("{id}/like")]
     public async Task<IActionResult> Like(int id)
     {
         Result result = await _postService.LikeAsync(id);
@@ -96,5 +100,5 @@ public class PostController : ControllerBase
             };
         }
         return NoContent();
-    }
+    }*/
 }

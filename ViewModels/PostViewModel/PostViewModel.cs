@@ -7,5 +7,5 @@ public class PostViewModel
     public string Title { get; set; }
     public string Content { get; set; }
     public string DateCreate { get; set; }
-    public ReactionViewModel Reaction { get; set; }
+    public int BlogId {get; set;}
 }

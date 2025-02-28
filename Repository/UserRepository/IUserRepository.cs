@@ -15,4 +15,7 @@ public interface IUserRepository
     Task<bool> NameInUseAsync(int id, string name);
     Task<bool> NameInUseAsync(string name);
 
+    Task<bool> IsOwnerBlog(int idUser, int idBlog);
+
+
 }

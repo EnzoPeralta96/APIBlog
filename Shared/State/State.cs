@@ -6,5 +6,7 @@ public enum State
     NotExist,
     NameInUse,
     PasswordsDifferents,
-    InternalServerError
+    InternalServerError,
+    Unauthorized,
+    Forbidden
 }

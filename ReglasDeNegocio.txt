@@ -1,0 +1,14 @@
+Usuario : puede ser admin o standar
+Un usuario puede tener 0 a n Blog
+A su vez el Blog puede contener 0 a n post.
+A su vez cada post puede tener 0 o n comentarios
+
+Blog : Solo el usuario puede crear blogs para sí mismo.
+Post en una blog : cualquier usuario puede crear posts en cualquier blog (con permisos de “colaborador”).
+Comentarios en un post : cualquier usuario puede comentar en cualquier post.
+
+
+
+
+
+

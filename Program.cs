@@ -51,6 +51,8 @@ builder.Services.AddAuthorization(options =>
     }
 );
 
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddScoped<IAuthorizationHandler, UserRequirementHandler>();
 
 var connectionString = builder.Configuration.GetConnectionString("PostgresSQLConnection");
@@ -61,13 +63,12 @@ builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IBlogRepository, BlogRepository>();
 builder.Services.AddScoped<IPostRepository, PostRepository>();
-builder.Services.AddScoped<IReactionRepostiroy, ReactionRepository>();
-
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISecurityService, SecutiryService>();
 builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddScoped<IBlogService, BlogService>();
 builder.Services.AddScoped<IPostService, PostService>();
+builder.Services.AddScoped<BlogAuthorizationService>();
 
 
 builder.Services.AddAuthentication(config =>

@@ -65,9 +65,4 @@ public class LoginController : ControllerBase
         }
         return Ok(new { mesagge = result.SuccesMessage });
     }
-
-
-
-
-
 }

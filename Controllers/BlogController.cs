@@ -3,6 +3,8 @@ using APIBlog.ViewModels;
 using APIBlog.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using APIBlog.AuthorizationPoliciesSample.Policies.Requeriment;
+using APIBlog.Models;
 namespace APIBlog.Controllers;
 
 [ApiController]
@@ -20,55 +22,45 @@ public class BlogController : ControllerBase
         _blogService = blogService;
     }
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetBlog(int id)
-    {
-        Result<BlogViewModel> result = await _blogService.BlogAsync(id);
-    
-        if (!result.IsSucces)
-        {
-            return result.State switch
-            {
-                State.NotExist => NotFound(new { message = result.ErrorMessage }),
-                State.InternalServerError => StatusCode(500, result.ErrorMessage),
-                _ => BadRequest(new { message = result.ErrorMessage })
-            };
-        }
-        
-        return Ok(result.Value);
-    }
-
+    /*
+    Un usuario se puede crear blog para si mismo, 
+    el admin tambien puede crear un blog para un usuario
+    */
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] BlogRequestViewModel blogRequest)
+    public async Task<IActionResult> Create([FromBody] BlogCreateViewModel blogCreated)
     {
-        //No hace falta ya que el atributo ApiController hace
-        //al haber un error de validación devolver un Bad request (400)
-        //if (!ModelState.IsValid) return BadRequest("Faltan datos");
 
-        var result = await _blogService.CreateAsync(blogRequest);
+        var result = await _blogService.CreateAsync(blogCreated);
 
         if (!result.IsSucces)
         {
             return result.State switch
             {
+                State.Forbidden => StatusCode(403, result.ErrorMessage),
+                State.NotExist => NotFound(new { message = result.ErrorMessage }),
                 State.NameInUse => BadRequest(new { message = result.ErrorMessage }),
                 State.InternalServerError => StatusCode(500, result.ErrorMessage),
                 _ => BadRequest(new { message = result.ErrorMessage })
-
             };
         }
         return Ok(result.Value);
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, [FromBody] BlogRequestViewModel blogRequest)
+
+    /*
+    El que puede actualizar un blog es el dueño o un admin
+    */
+    [HttpPut]
+    public async Task<IActionResult> Update([FromBody] BlogUpdateViewModel blogUpdate)
     {
-        Result result = await _blogService.UpdateAsync(id, blogRequest);
+
+        Result result = await _blogService.UpdateAsync(blogUpdate);
 
         if (!result.IsSucces)
         {
             return result.State switch
             {
+                State.Forbidden => StatusCode(403, result.ErrorMessage),
                 State.NotExist => NotFound(new { message = result.ErrorMessage }),
                 State.NameInUse => BadRequest(new { message = result.ErrorMessage }),
                 State.InternalServerError => StatusCode(500, result.ErrorMessage),
@@ -78,16 +70,21 @@ public class BlogController : ControllerBase
 
         return NoContent();
     }
-    
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id)
+
+    /*
+    El que puede borrar un blog es el dueño o un admin
+    */
+    [HttpDelete("{idOwner}/{idBlog}")]
+    public async Task<IActionResult> Delete(int idOwner, int idBlog)
     {
-        Result result = await _blogService.DeleteAsync(id);
+
+        Result result = await _blogService.DeleteAsync(idOwner, idBlog);
 
         if (!result.IsSucces)
         {
             return result.State switch
             {
+                State.Forbidden => StatusCode(403, result.ErrorMessage),
                 State.NotExist => NotFound(new { message = result.ErrorMessage }),
                 State.InternalServerError => StatusCode(500, result.ErrorMessage),
                 _ => BadRequest(new { message = result.ErrorMessage })
@@ -97,24 +94,8 @@ public class BlogController : ControllerBase
         return Ok(new { message = result.SuccesMessage });
     }
 
-    [HttpGet]
-    public async Task<IActionResult> GetBlogs()
-    {
-        Result<List<BlogViewModel>> result = await _blogService.BlogsAsync();
 
-        if (!result.IsSucces)
-        {
-            return result.State switch
-            {
-                State.InternalServerError => StatusCode(500, result.ErrorMessage),
-                _ => BadRequest(new { message = result.ErrorMessage })
-            };
-        }
-
-        return Ok(result.Value);
-    }
-
-    [HttpGet("{idBlog}/posts")]
+   /* [HttpGet("{idBlog}/posts")]
     public async Task<IActionResult> GetPosts(int idBlog)
     {
         Result<List<PostViewModel>> result = await _blogService.PostsByBlogAsync(idBlog);
@@ -128,11 +109,45 @@ public class BlogController : ControllerBase
                 _ => BadRequest(new { message = result.ErrorMessage })
             };
         }
-        
+
+        return Ok(result.Value);
+    }*/
+
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetBlog(int id)
+    {
+        Result<BlogViewModel> result = await _blogService.BlogAsync(id);
+
+        if (!result.IsSucces)
+        {
+            return result.State switch
+            {
+                State.NotExist => NotFound(new { message = result.ErrorMessage }),
+                State.InternalServerError => StatusCode(500, result.ErrorMessage),
+                _ => BadRequest(new { message = result.ErrorMessage })
+            };
+        }
+
         return Ok(result.Value);
     }
 
+    [HttpGet("UserBlogs/{userId}")]
+    public async Task<IActionResult> GetBlogs(int userId)
+    {
+        Result<List<BlogViewModel>> result = await _blogService.BlogsAsync(userId);
 
+        if (!result.IsSucces)
+        {
+            return result.State switch
+            {
+                State.InternalServerError => StatusCode(500, result.ErrorMessage),
+                _ => BadRequest(new { message = result.ErrorMessage })
+            };
+        }
+
+        return Ok(result.Value);
+    }
 
 
 

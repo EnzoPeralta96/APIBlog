@@ -7,11 +7,15 @@ using AutoMapper;
 namespace APIBlog.Services;
 public class BlogService : IBlogService
 {
+    private readonly BlogAuthorizationService _blogAuthorizationService;
     private readonly IBlogRepository _blogRepository;
+    private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
-    public BlogService(IBlogRepository blogRepository, IMapper mapper)
+    public BlogService(BlogAuthorizationService blogAuthorizationService, IBlogRepository blogRepository, IUserRepository userRepository, IMapper mapper)
     {
+        _blogAuthorizationService = blogAuthorizationService;
         _blogRepository = blogRepository;
+        _userRepository = userRepository;
         _mapper = mapper;
     }
 
@@ -37,21 +41,26 @@ public class BlogService : IBlogService
     /// Controla la existencia de un blog por su nombre en la db.
     /// Si no existe, se crea el blog y se guarda en la db
     /// </summary>
-    /// <param name="blogRequest">Es un viewModel con los datos necesarios para crear un blog</param>
+    /// <param name="blogCreate">Es un viewModel con los datos necesarios para crear un blog</param>
     /// <returns>
     ///     En caso de que el blog existe,devuelve un resultado fallido con un mensaje de error.
     ///     Caso contrario devuelve el blog creado en forma de viewmodel
     ///  </returns>
 
-    public async Task<Result<BlogViewModel>> CreateAsync(BlogRequestViewModel blogRequest)
+    public async Task<Result<BlogViewModel>> CreateAsync(BlogCreateViewModel blogCreate)
     {
         try
         {
-            bool nameBlogInUse = await _blogRepository.NameInUseAsync(blogRequest.Name);
+
+            var authorizationResult = await _blogAuthorizationService.AuthorizeAsync(blogCreate.OwnerBlogId);
+
+            if (!authorizationResult.IsSucces) return Result<BlogViewModel>.Failure(authorizationResult.ErrorMessage, authorizationResult.State);
+
+            bool nameBlogInUse = await _blogRepository.NameInUseAsync(blogCreate.Name);
 
             if (nameBlogInUse) return Result<BlogViewModel>.Failure("El blog ya existe", State.NameInUse);
 
-            var blog = _mapper.Map<Blog>(blogRequest);
+            var blog = _mapper.Map<Blog>(blogCreate);
 
             await _blogRepository.CreateAsync(blog);
 
@@ -67,8 +76,6 @@ public class BlogService : IBlogService
         {
             return Result<BlogViewModel>.Failure($"Error inesperado: {ex.Message}", State.InternalServerError);
         }
-        //Controlo si no hay un blog con el mismo nombre
-
     }
 
 
@@ -77,21 +84,25 @@ public class BlogService : IBlogService
         el código correspondiente en el controller
     */
 
-    public async Task<Result> UpdateAsync(int id, BlogRequestViewModel blogRequest)
+    public async Task<Result> UpdateAsync(BlogUpdateViewModel blogUpdate)
     {
         try
         {
-            bool blogExists = await _blogRepository.ExistsAsync(id);
+            var authorizationResult = await _blogAuthorizationService.AuthorizeAsync(blogUpdate.OwnerBlogId, blogUpdate.IdBlog);
+
+            if (!authorizationResult.IsSucces) return Result.Failure(authorizationResult.ErrorMessage, authorizationResult.State);
+
+            bool blogExists = await _blogRepository.ExistsAsync(blogUpdate.IdBlog);
 
             if (!blogExists) return Result.Failure("El blog no existe", State.NotExist);
 
-            var existingBlog = await _blogRepository.GetBlogAsync(blogRequest.Name);
+            bool nameInUse = await _blogRepository.NameInUseAsync(blogUpdate.IdBlog, blogUpdate.Name);
 
-            if (existingBlog is not null && existingBlog.Id != id) return Result.Failure("Nombre de blog en uso", State.NameInUse);
+            if (nameInUse) return Result.Failure("Nombre de blog en uso", State.NameInUse);
 
-            var blog = _mapper.Map<Blog>(blogRequest);
+            var blog = _mapper.Map<Blog>(blogUpdate);
 
-            await _blogRepository.UpdateAsync(id, blog);
+            await _blogRepository.UpdateAsync(blog);
 
             return Result.Succes();
         }
@@ -102,15 +113,19 @@ public class BlogService : IBlogService
 
     }
 
-    public async Task<Result> DeleteAsync(int id)
+    public async Task<Result> DeleteAsync(int ownerId, int blogId)
     {
         try
         {
-            bool blogExists = await _blogRepository.ExistsAsync(id);
+            var authorizationResult = await _blogAuthorizationService.AuthorizeAsync(ownerId,blogId);
 
-            if (!blogExists) return Result.Failure($"El Blog con id = {id} no existe",State.NotExist);
+            if (!authorizationResult.IsSucces) return Result.Failure(authorizationResult.ErrorMessage, authorizationResult.State);
 
-            await _blogRepository.DeleteAsync(id);
+            bool blogExists = await _blogRepository.ExistsAsync(blogId);
+
+            if (!blogExists) return Result.Failure($"El Blog con id = {blogId} no existe", State.NotExist);
+
+            await _blogRepository.DeleteAsync(blogId);
 
             return Result.Succes("Blog eliminado con éxito");
         }
@@ -121,11 +136,11 @@ public class BlogService : IBlogService
 
     }
 
-    public async Task<Result<List<BlogViewModel>>> BlogsAsync()
+    public async Task<Result<List<BlogViewModel>>> BlogsAsync(int userId)
     {
         try
         {
-            var blogs = await _blogRepository.BlogsAsync();
+            var blogs = await _blogRepository.BlogsAsync(userId);
 
             var blogsViewModel = _mapper.Map<List<BlogViewModel>>(blogs);
 

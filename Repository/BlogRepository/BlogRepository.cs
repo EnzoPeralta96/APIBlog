@@ -10,35 +10,32 @@ public class BlogRepository : IBlogRepository
         _blogDbContext = blogDb;
     }
 
-    public async Task<Blog> GetBlogAsync(int id)
-    {
-        var blog = await _blogDbContext.Blogs
-                        .AsNoTracking()
-                        .Include(bl => bl.Posts)
-                            .ThenInclude(ps => ps.Reaction)
-                        .FirstOrDefaultAsync(bl => bl.Id == id);
-        return blog;
-    }
 
     public async Task CreateAsync(Blog blog)
     {
-
         await _blogDbContext.Blogs.AddAsync(blog);
         await _blogDbContext.SaveChangesAsync();
     }
 
-  
-
-    public async Task UpdateAsync(int id, Blog blog)
+    public async Task UpdateAsync(Blog blog)
     {
         await _blogDbContext.Blogs
-                .Where(bl => bl.Id == id)
+                .Where(bl => bl.Id == blog.Id)
                 .ExecuteUpdateAsync(setters => setters
                     .SetProperty(bl => bl.Name, blog.Name)
                     .SetProperty(bl => bl.Description, blog.Description)
                 );
     }
 
+
+    public async Task<Blog> GetBlogAsync(int id)
+    {
+        var blog = await _blogDbContext.Blogs
+                        .AsNoTracking()
+                        .Include(bl => bl.Posts)
+                        .FirstOrDefaultAsync(bl => bl.Id == id);
+        return blog;
+    }
 
     public async Task DeleteAsync(int id)
     {
@@ -53,19 +50,16 @@ public class BlogRepository : IBlogRepository
         var blog = await _blogDbContext.Blogs
                         .AsNoTracking()
                         .Include(bl => bl.Posts)
-                            .ThenInclude(ps => ps.Reaction)
                         .FirstOrDefaultAsync(bl => bl.Name == name);
         return blog;
     }
 
-    public async Task<List<Blog>> BlogsAsync()
+    public async Task<List<Blog>> BlogsAsync(int userId)
     {
-        var blogs = await _blogDbContext.Blogs
+        return await _blogDbContext.Blogs
                     .AsNoTracking()
-                    .Include(bl => bl.Posts)
-                        .ThenInclude(ps => ps.Reaction)
+                    .Where(bl => bl.UserId == userId)
                     .ToListAsync();
-        return blogs;
     }
 
 
@@ -73,7 +67,6 @@ public class BlogRepository : IBlogRepository
     {
         var posts = await _blogDbContext.Posts
                         .Where(p => p.BlogId == id)
-                        .Include(ps => ps.Reaction)
                         .AsNoTracking()
                         .ToListAsync();
         return posts;
@@ -83,10 +76,17 @@ public class BlogRepository : IBlogRepository
     {
         var posts = await _blogDbContext.Posts
                     .Where(p => p.Blog.Name == name)
-                    .Include(ps => ps.Reaction)
                     .AsNoTracking()
                     .ToListAsync();
         return posts;
+    }
+
+    public async Task<bool> NameInUseAsync(int idBlog, string name)
+    {
+        return await _blogDbContext.Blogs
+                    .AsNoTracking()
+                    .Where(bl => bl.Id != idBlog)
+                    .AnyAsync(bl => bl.Name == name);
     }
 
     public async Task<bool> NameInUseAsync(string name)
@@ -103,6 +103,8 @@ public class BlogRepository : IBlogRepository
                         .AsNoTracking()
                         .AnyAsync(bl => bl.Id == id);
     }
+
+   
 
     /*public async Task UpdateAsync(int id, Blog blog)
     {

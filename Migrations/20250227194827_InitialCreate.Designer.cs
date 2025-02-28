@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace APIBlog.Migrations
 {
     [DbContext(typeof(BlogDbContext))]
-    [Migration("20250221031944_v1")]
-    partial class v1
+    [Migration("20250227194827_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -29,142 +29,182 @@ namespace APIBlog.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("description");
 
                     b.Property<string>("Name")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("userid");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_blogs");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_blogs_userid");
 
-                    b.ToTable("blog", (string)null);
+                    b.ToTable("blogs");
                 });
 
             modelBuilder.Entity("APIBlog.Models.Comment", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Comentary")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("comentary");
 
                     b.Property<int>("PostId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("postid");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("userid");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_comments");
 
-                    b.HasIndex("PostId");
+                    b.HasIndex("PostId")
+                        .HasDatabaseName("ix_comments_postid");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_comments_userid");
 
-                    b.ToTable("comment", (string)null);
+                    b.ToTable("comments");
                 });
 
             modelBuilder.Entity("APIBlog.Models.Post", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("BlogId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("blogid");
 
                     b.Property<string>("Content")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("content");
 
                     b.Property<DateTime>("DateCreate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("datecreate");
+
+                    b.Property<int>("Likes")
+                        .HasColumnType("integer")
+                        .HasColumnName("likes");
 
                     b.Property<string>("Title")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("title");
 
-                    b.HasKey("Id");
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("userid");
 
-                    b.HasIndex("BlogId");
+                    b.Property<int>("Views")
+                        .HasColumnType("integer")
+                        .HasColumnName("views");
 
-                    b.ToTable("post", (string)null);
-                });
+                    b.HasKey("Id")
+                        .HasName("pk_posts");
 
-            modelBuilder.Entity("APIBlog.Models.Reaction", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                    b.HasIndex("BlogId")
+                        .HasDatabaseName("ix_posts_blogid");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_posts_userid");
 
-                    b.Property<int>("NumberOfLikes")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("NumberOfReading")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("PostId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PostId")
-                        .IsUnique();
-
-                    b.ToTable("reaction", (string)null);
+                    b.ToTable("posts");
                 });
 
             modelBuilder.Entity("APIBlog.Models.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
                     b.Property<string>("Password")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("password");
 
                     b.Property<int>("RoleId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("roleid");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_users");
 
-                    b.HasIndex("RoleId");
+                    b.HasIndex("RoleId")
+                        .HasDatabaseName("ix_users_roleid");
 
-                    b.ToTable("user", (string)null);
+                    b.ToTable("users");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "admin",
+                            Password = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4",
+                            RoleId = 1
+                        });
                 });
 
             modelBuilder.Entity("Role", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Rol")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("rol");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_roles");
 
-                    b.ToTable("role", (string)null);
+                    b.ToTable("roles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Rol = "admin"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Rol = "estandar"
+                        });
                 });
 
             modelBuilder.Entity("APIBlog.Models.Blog", b =>
@@ -187,7 +227,7 @@ namespace APIBlog.Migrations
                         .IsRequired();
 
                     b.HasOne("APIBlog.Models.User", "User")
-                        .WithMany()
+                        .WithMany("Comments")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -205,18 +245,15 @@ namespace APIBlog.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Blog");
-                });
-
-            modelBuilder.Entity("APIBlog.Models.Reaction", b =>
-                {
-                    b.HasOne("APIBlog.Models.Post", "Post")
-                        .WithOne("Reaction")
-                        .HasForeignKey("APIBlog.Models.Reaction", "PostId")
+                    b.HasOne("APIBlog.Models.User", "User")
+                        .WithMany("Posts")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Post");
+                    b.Navigation("Blog");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("APIBlog.Models.User", b =>
@@ -238,13 +275,15 @@ namespace APIBlog.Migrations
             modelBuilder.Entity("APIBlog.Models.Post", b =>
                 {
                     b.Navigation("Comments");
-
-                    b.Navigation("Reaction");
                 });
 
             modelBuilder.Entity("APIBlog.Models.User", b =>
                 {
                     b.Navigation("Blogs");
+
+                    b.Navigation("Comments");
+
+                    b.Navigation("Posts");
                 });
 #pragma warning restore 612, 618
         }
