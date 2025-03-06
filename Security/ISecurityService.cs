@@ -1,6 +1,6 @@
 using APIBlog.Models;
 
-namespace APIBlog.Services;
+namespace APIBlog.Security;
 
 public interface ISecurityService
 {

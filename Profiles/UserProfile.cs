@@ -8,6 +8,6 @@ public class UserProfile : Profile
     {
         CreateMap<User,UserViewModel>();
         CreateMap<UserUpdateViewModel,User>();
-         CreateMap<UserPasswordUpdateViewModel,User>();
+        CreateMap<UserPasswordUpdateViewModel,User>();
     }
 }

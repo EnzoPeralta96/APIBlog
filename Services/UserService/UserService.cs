@@ -1,6 +1,7 @@
 using APIBlog.Models;
 using APIBlog.Policies.Authorization;
 using APIBlog.Repository;
+using APIBlog.Security;
 using APIBlog.Shared;
 using APIBlog.ViewModels;
 using AutoMapper;

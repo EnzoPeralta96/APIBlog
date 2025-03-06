@@ -18,7 +18,22 @@ public class BlogService : IBlogService
         _userAuthorizationService = userAuthorizationService;
         _mapper = mapper;
     }
+    public async Task<Result<List<BlogViewModel>>> BlogsAsync(int userId)
+    {
+        try
+        {
+            var blogs = await _blogRepository.BlogsAsync(userId);
 
+            var blogsViewModel = _mapper.Map<List<BlogViewModel>>(blogs);
+
+            return Result<List<BlogViewModel>>.Succes(blogsViewModel);
+        }
+        catch (Exception ex)
+        {
+            return Result<List<BlogViewModel>>.Failure($"Error: {ex.Message}", State.InternalServerError);
+        }
+    }
+    
     public async Task<Result<BlogViewModel>> BlogAsync(int id)
     {
         try
@@ -88,7 +103,7 @@ public class BlogService : IBlogService
     {
         try
         {
-            var authorizationResult = await _userAuthorizationService.AuthorizeUserAsync(blogUpdate.OwnerBlogId, blogUpdate.IdBlog);
+            var authorizationResult = await _userAuthorizationService.AuthorizeUserBlogAsync(blogUpdate.OwnerBlogId, blogUpdate.IdBlog);
 
             if (!authorizationResult.IsSucces) return Result.Failure(authorizationResult.ErrorMessage, authorizationResult.State);
 
@@ -117,7 +132,7 @@ public class BlogService : IBlogService
     {
         try
         {
-            var authorizationResult = await _userAuthorizationService.AuthorizeUserAsync(ownerId, blogId);
+            var authorizationResult = await _userAuthorizationService.AuthorizeUserBlogAsync(ownerId, blogId);
 
             if (!authorizationResult.IsSucces) return Result.Failure(authorizationResult.ErrorMessage, authorizationResult.State);
 
@@ -136,23 +151,9 @@ public class BlogService : IBlogService
 
     }
 
-    public async Task<Result<List<BlogViewModel>>> BlogsAsync(int userId)
-    {
-        try
-        {
-            var blogs = await _blogRepository.BlogsAsync(userId);
 
-            var blogsViewModel = _mapper.Map<List<BlogViewModel>>(blogs);
 
-            return Result<List<BlogViewModel>>.Succes(blogsViewModel);
-        }
-        catch (Exception ex)
-        {
-            return Result<List<BlogViewModel>>.Failure($"Error: {ex.Message}", State.InternalServerError);
-        }
-    }
-
-    public async Task<Result<List<PostViewModel>>> PostsByBlogAsync(int id)
+    /*public async Task<Result<List<PostViewModel>>> PostsByBlogAsync(int id)
     {
         try
         {
@@ -171,5 +172,5 @@ public class BlogService : IBlogService
             return Result<List<PostViewModel>>.Failure($"Error: {ex.Message}", State.InternalServerError);
         }
 
-    }
+    }*/
 }

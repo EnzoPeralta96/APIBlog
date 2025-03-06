@@ -16,7 +16,7 @@ public class BlogProfile : Profile
             .ForMember(dest => dest.UserId, option => option.MapFrom(src => src.OwnerBlogId));
 
         CreateMap<Blog, BlogViewModel>()
-            .ForMember(dest => dest.OwnerId, option => option.MapFrom(src => src.UserId));
+            .ForMember(dest => dest.OwnerBlog, option => option.MapFrom(src => src.User));
     }
 
 }

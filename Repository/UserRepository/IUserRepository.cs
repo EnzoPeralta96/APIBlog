@@ -12,10 +12,12 @@ public interface IUserRepository
     Task DeleteAsync(int id);
     Task<bool> ExistsAsync(int id);
     Task<bool> ExistsAsync(string name, string password);
-    Task<bool> NameInUseAsync(int id, string name);
-    Task<bool> NameInUseAsync(string name);
 
-    Task<bool> IsOwnerBlog(int idUser, int idBlog);
+    //Para actualizar
+    Task<bool> NameInUseAsync(int id, string name);
+
+    //Para crear
+    Task<bool> NameInUseAsync(string name);
 
 
 }

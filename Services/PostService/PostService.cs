@@ -1,4 +1,5 @@
 using APIBlog.Models;
+using APIBlog.Policies.Authorization;
 using APIBlog.Repository;
 using APIBlog.Shared;
 using APIBlog.ViewModels;
@@ -7,14 +8,36 @@ using AutoMapper;
 namespace APIBlog.Services;
 public class PostService : IPostService
 {
-    private readonly IPostRepository _postRepository;
+    private readonly IUserAuthorizationService _userAuthorizationService;
     private readonly IBlogRepository _blogRepository;
+    private readonly IPostRepository _postRepository;
     private readonly IMapper _mapper;
-    public PostService(IPostRepository postRepository, IBlogRepository blogRepository, IMapper mapper)
+    public PostService(IUserAuthorizationService userAuthorizationService, IPostRepository postRepository, IBlogRepository blogRepository, IMapper mapper)
     {
-        _postRepository = postRepository;
+        _userAuthorizationService = userAuthorizationService;
         _blogRepository = blogRepository;
+        _postRepository = postRepository;
         _mapper = mapper;
+    }
+
+    public async Task<Result<List<PostViewModel>>> GetPostsByBlogAsync(int blogId)
+    {
+        try
+        {
+            bool blogExists = await _blogRepository.ExistsAsync(blogId);
+
+            if (!blogExists) return Result<List<PostViewModel>>.Failure($"El blog id = {blogId} no existe", State.NotExist);
+
+            var posts = await _postRepository.GetPostsByBlogAsync(blogId);
+
+            var postsViewModel = _mapper.Map<List<PostViewModel>>(posts);
+
+            return Result<List<PostViewModel>>.Succes(postsViewModel);
+        }
+        catch (Exception ex)
+        {
+            return Result<List<PostViewModel>>.Failure($"Error: {ex.Message}", State.InternalServerError);
+        }
     }
 
     public async Task<Result<PostViewModel>> GetPostAsync(int id)
@@ -41,6 +64,10 @@ public class PostService : IPostService
     {
         try
         {
+            var authorizationResult = await _userAuthorizationService.AuthorizeUserAsync(postCreate.OwnerPostId);
+
+            if (!authorizationResult.IsSucces) return Result<PostViewModel>.Failure(authorizationResult.ErrorMessage, authorizationResult.State);
+
             bool blogExists = await _blogRepository.ExistsAsync(postCreate.BlogId);
 
             if (!blogExists) return Result<PostViewModel>.Failure($"El blog id = {postCreate.BlogId} no existe", State.NotExist);
@@ -63,10 +90,19 @@ public class PostService : IPostService
     {
         try
         {
+            var authorizationUpdateResult = await _userAuthorizationService.AuthorizeUserPostRequestAsync(postUpdate.OwnerPostId, postUpdate.PostId);
+
+            if (!authorizationUpdateResult.IsSucces) return Result.Failure(authorizationUpdateResult.ErrorMessage, authorizationUpdateResult.State);
+
+
             bool postExists = await _postRepository.ExistsAsync(postUpdate.PostId);
+
             if (!postExists) return Result.Failure($"El post con id = {postUpdate.PostId} no existe", State.NotExist);
+
             var post = _mapper.Map<Post>(postUpdate);
+
             await _postRepository.UpdateAsync(post);
+
             return Result.Succes();
         }
         catch (Exception ex)
@@ -75,13 +111,20 @@ public class PostService : IPostService
         }
     }
 
-    public async Task<Result> DeleteAsync(int id)
+    public async Task<Result> DeleteAsync(int ownerId, int postId)
     {
         try
         {
-            bool postExists = await _postRepository.ExistsAsync(id);
-            if (!postExists) return Result.Failure($"El post con id = {id} no existe", State.NotExist);
-            await _postRepository.DeleteAsync(id);
+            var authorizationDeleteResult = await _userAuthorizationService.AuthorizeUserPostRequestAsync(ownerId, postId);
+
+            if (!authorizationDeleteResult.IsSucces) return Result.Failure(authorizationDeleteResult.ErrorMessage, authorizationDeleteResult.State);
+
+            bool postExists = await _postRepository.ExistsAsync(postId);
+
+            if (!postExists) return Result.Failure($"El post con id = {postId} no existe", State.NotExist);
+
+            await _postRepository.DeleteAsync(postId);
+
             return Result.Succes("Post eliminado con éxito");
         }
         catch (Exception ex)
@@ -91,28 +134,3 @@ public class PostService : IPostService
     }
 
 }
-
-
-   /* public async Task<Result> LikeAsync(int postId)
-    {
-        try
-        {
-            bool postExists = await _postRepository.ExistsAsync(postId);
-            if (!postExists) return Result.Failure($"El post con id = {postId} no existe", State.NotExist);
-            await _reactionRepository.ILikeAsync(postId);
-            return Result.Succes();
-        }
-        catch (Exception ex)
-        {
-            return Result.Failure($"Error: {ex.Message}", State.InternalServerError);
-        }
-    }*/
-
-/*
-    public Task CreateAsync(Post post);
-    public Task UpdateAsync(int id, Post post);
-    public Task DeleteAsync(int id);
-    public Task<Post> GetPostAsync(int id);
-    public Task ReactPostAsync(int id);
-    public Task ReadPostAsync(int id);
-*/

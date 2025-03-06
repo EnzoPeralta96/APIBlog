@@ -5,6 +5,7 @@ using APIBlog.Models;
 using APIBlog.Repository;
 using Microsoft.AspNetCore.Routing.Tree;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 public class PostRepository : IPostRepository
 {
@@ -15,12 +16,20 @@ public class PostRepository : IPostRepository
         _blogDbContext = blogDbContext;
     }
 
+    public async Task<List<Post>> GetPostsByBlogAsync(int blogId)
+    {
+        return await _blogDbContext.Posts
+                    .AsNoTracking()
+                    .Where(pst => pst.BlogId == blogId)
+                    .Include(pst => pst.User)
+                    .ToListAsync();
+    }
     public async Task<Post> GetPostAsync(int id)
     {
-        var post = await _blogDbContext.Posts
+        return await _blogDbContext.Posts
                         .AsNoTracking()
+                        .Include(pst => pst.User)
                         .FirstOrDefaultAsync(p => p.Id == id);
-        return post;
     }
 
     public async Task CreateAsync(Post post)
@@ -31,19 +40,19 @@ public class PostRepository : IPostRepository
 
     public async Task UpdateAsync(Post post)
     {
-        var postToUpdate = new Post { Id = post.Id, Title = post.Title, Content = post.Content };
-        _blogDbContext.Posts.Attach(postToUpdate);
-        _blogDbContext.Entry(postToUpdate).Property(p => p.Title).IsModified = true;
-        _blogDbContext.Entry(postToUpdate).Property(p => p.Content).IsModified = true;
-        await _blogDbContext.SaveChangesAsync();
+        await _blogDbContext.Posts
+                .Where(pst => pst.Id == post.Id)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(pst => pst.Title, post.Title)
+                    .SetProperty(pst => pst.Content, post.Content)
+                );
     }
 
     public async Task DeleteAsync(int id)
     {
-        var postToDelete = new Post { Id = id };
-        _blogDbContext.Posts.Attach(postToDelete);
-        _blogDbContext.Posts.Remove(postToDelete);
-        await _blogDbContext.SaveChangesAsync();
+        await _blogDbContext.Posts
+                .Where(pst => pst.Id == id)
+                .ExecuteDeleteAsync();
     }
 
     public async Task<bool> ExistsAsync(int id)
@@ -53,49 +62,10 @@ public class PostRepository : IPostRepository
                     .AnyAsync(p => p.Id == id);
     }
 
-    /* public async Task UpdateAsync(int id, Post post)
-     {
-         var post_update = await _blogDbContext.Posts.FindAsync(id);
-         post_update.Title = post.Title;
-         post_update.Content = post.Content;
-         await _blogDbContext.SaveChangesAsync();
-     }*/
-
-
-    /* public async Task DeleteAsync(int id)
-     {
-         var post = await _blogDbContext.Posts.FindAsync(id);
-         _blogDbContext.Posts.Remove(post);
-         await _blogDbContext.SaveChangesAsync();
-     }*/
-
-
-    /*public async Task<Post> GetLastPostAsync()
+    public async Task<bool> IsOwnerPost(int idUser, int idPost)
     {
-        var post = await _blogDbContext.Posts
-                        .AsNoTracking()
-                        .OrderByDescending(pt => pt.Id)
-                        .FirstOrDefaultAsync();
-        return post;
-    }*/
-
-    /* public async Task LikeAsync(int id)
-     {
-         var post = await _blogDbContext.Posts.FindAsync(id);
-         post.Reaction.NumberOfLikes++;
-         await _blogDbContext.SaveChangesAsync();
-     }
-
-     public async Task LikeAsync(int id)
-     {
-         await _blogDbContext.Po
-     }
-
-     public async Task ReadAsync(int id)
-     {
-         var post = await _blogDbContext.Posts.FindAsync(id);
-         post.Reaction.NumberOfReading++;
-         await _blogDbContext.SaveChangesAsync();
-     }*/
-
+        return await _blogDbContext.Posts
+                         .AsNoTracking()
+                         .AnyAsync(post => post.UserId == idUser && post.Id == idPost);
+    }  
 }

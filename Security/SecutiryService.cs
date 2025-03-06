@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using APIBlog.Models;
 using Microsoft.IdentityModel.Tokens;
-namespace APIBlog.Services;
+namespace APIBlog.Security;
 
 public class SecutiryService : ISecurityService
 {

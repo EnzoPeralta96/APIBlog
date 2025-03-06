@@ -18,6 +18,22 @@ public class PostController : ControllerBase
         _postService = postService;
     }
 
+    [HttpGet("postsByBlog/{blogId}")]
+    public async Task<IActionResult> GetPosts(int blogId)
+    {
+        Result<List<PostViewModel>> result = await _postService.GetPostsByBlogAsync(blogId);
+        if (!result.IsSucces)
+        {
+            return result.State switch
+            {
+                State.NotExist => NotFound(new { message = result.ErrorMessage }),
+                State.InternalServerError => StatusCode(500, result.ErrorMessage),
+                _ => BadRequest(new { message = result.ErrorMessage })
+            };
+        }
+        return Ok(result.Value);
+    }
+
     [HttpGet("{id}")]
     public async Task<IActionResult> GetPost(int id)
     {
@@ -43,6 +59,7 @@ public class PostController : ControllerBase
         {
             return result.State switch
             {
+                State.Forbidden => StatusCode(403, result.ErrorMessage),
                 State.NotExist => NotFound(new { message = result.ErrorMessage }),
                 State.InternalServerError => StatusCode(500, result.ErrorMessage),
                 _ => BadRequest(new { message = result.ErrorMessage })
@@ -51,7 +68,7 @@ public class PostController : ControllerBase
         return Ok(result.Value);
     }
 
-     //Lo puede hacer el Admin, OwnerPost
+    //Lo puede hacer el Admin, OwnerPost
     [HttpPut]
     public async Task<IActionResult> Update(PostUpdateViewModel postRequest)
     {
@@ -60,6 +77,7 @@ public class PostController : ControllerBase
         {
             return result.State switch
             {
+                State.Forbidden => StatusCode(403, result.ErrorMessage),
                 State.NotExist => NotFound(new { message = result.ErrorMessage }),
                 State.InternalServerError => StatusCode(500, result.ErrorMessage),
                 _ => BadRequest(new { message = result.ErrorMessage })
@@ -70,14 +88,15 @@ public class PostController : ControllerBase
 
     //Lo puede hacer el Admin, OwnerBlog u OwnerPost
 
-    [HttpDelete("id")]
-    public async Task<IActionResult> Delete(int id)
+    [HttpDelete("{ownerId}/{postId}")]
+    public async Task<IActionResult> Delete(int ownerId, int postId)
     {
-        Result result = await _postService.DeleteAsync(id);
+        Result result = await _postService.DeleteAsync(ownerId, postId);
         if (!result.IsSucces)
         {
             return result.State switch
             {
+                State.Forbidden => StatusCode(403, result.ErrorMessage),
                 State.NotExist => NotFound(new { message = result.ErrorMessage }),
                 State.InternalServerError => StatusCode(500, result.ErrorMessage),
                 _ => BadRequest(new { message = result.ErrorMessage })
@@ -86,19 +105,5 @@ public class PostController : ControllerBase
         return Ok(new { message = result.SuccesMessage });
     }
 
-   /* [HttpPut("{id}/like")]
-    public async Task<IActionResult> Like(int id)
-    {
-        Result result = await _postService.LikeAsync(id);
-        if (!result.IsSucces)
-        {
-            return result.State switch
-            {
-                State.NotExist => NotFound(new { message = result.ErrorMessage }),
-                State.InternalServerError => StatusCode(500, result.ErrorMessage),
-                _ => BadRequest(new { message = result.ErrorMessage })
-            };
-        }
-        return NoContent();
-    }*/
+
 }

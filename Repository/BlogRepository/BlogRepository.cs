@@ -10,6 +10,23 @@ public class BlogRepository : IBlogRepository
         _blogDbContext = blogDb;
     }
 
+    public async Task<List<Blog>> BlogsAsync(int userId)
+    {
+        return await _blogDbContext.Blogs
+                    .AsNoTracking()
+                    .Where(bl => bl.UserId == userId)
+                    .Include(bl => bl.User)
+                    .ToListAsync();
+    }
+
+    public async Task<Blog> GetBlogAsync(int id)
+    {
+        var blog = await _blogDbContext.Blogs
+                        .AsNoTracking()
+                        .Include(bl => bl.User)
+                        .FirstOrDefaultAsync(bl => bl.Id == id);
+        return blog;
+    }
 
     public async Task CreateAsync(Blog blog)
     {
@@ -26,75 +43,11 @@ public class BlogRepository : IBlogRepository
                     .SetProperty(bl => bl.Description, blog.Description)
                 );
     }
-
-
-    public async Task<Blog> GetBlogAsync(int id)
-    {
-        var blog = await _blogDbContext.Blogs
-                        .AsNoTracking()
-                        .Include(bl => bl.Posts)
-                        .FirstOrDefaultAsync(bl => bl.Id == id);
-        return blog;
-    }
-
     public async Task DeleteAsync(int id)
     {
         await _blogDbContext.Blogs
              .Where(bl => bl.Id == id)
              .ExecuteDeleteAsync();
-    }
-
-
-    public async Task<Blog> GetBlogAsync(string name)
-    {
-        var blog = await _blogDbContext.Blogs
-                        .AsNoTracking()
-                        .Include(bl => bl.Posts)
-                        .FirstOrDefaultAsync(bl => bl.Name == name);
-        return blog;
-    }
-
-    public async Task<List<Blog>> BlogsAsync(int userId)
-    {
-        return await _blogDbContext.Blogs
-                    .AsNoTracking()
-                    .Where(bl => bl.UserId == userId)
-                    .ToListAsync();
-    }
-
-
-    public async Task<List<Post>> PostsByBlogAsync(int id)
-    {
-        var posts = await _blogDbContext.Posts
-                        .Where(p => p.BlogId == id)
-                        .AsNoTracking()
-                        .ToListAsync();
-        return posts;
-    }
-
-    public async Task<List<Post>> PostsByBlogAsync(string name)
-    {
-        var posts = await _blogDbContext.Posts
-                    .Where(p => p.Blog.Name == name)
-                    .AsNoTracking()
-                    .ToListAsync();
-        return posts;
-    }
-
-    public async Task<bool> NameInUseAsync(int idBlog, string name)
-    {
-        return await _blogDbContext.Blogs
-                    .AsNoTracking()
-                    .Where(bl => bl.Id != idBlog)
-                    .AnyAsync(bl => bl.Name == name);
-    }
-
-    public async Task<bool> NameInUseAsync(string name)
-    {
-        return await _blogDbContext.Blogs
-                    .AsNoTracking()
-                    .AnyAsync(bl => bl.Name == name);
-
     }
 
     public async Task<bool> ExistsAsync(int id)
@@ -104,40 +57,27 @@ public class BlogRepository : IBlogRepository
                         .AnyAsync(bl => bl.Id == id);
     }
 
-   
-
-    /*public async Task UpdateAsync(int id, Blog blog)
+    //Se usa para actualizacion
+    public async Task<bool> NameInUseAsync(int idBlog, string name)
     {
-        var searched_blog = await _blogDbContext.Blogs.FindAsync(id);
-        searched_blog.Name = blog.Name;
-        searched_blog.Description = blog.Description;
-        await _blogDbContext.SaveChangesAsync();
-    }*/
-
-    /* public async Task DeleteAsync(int id)
-     {
-         var searched_blog = await _blogDbContext.Blogs.FindAsync(id);
-         _blogDbContext.Blogs.Remove(searched_blog);
-         await _blogDbContext.SaveChangesAsync();
-     }*/
-
-    /*public async Task DeleteAsync(int id)
-{
-   var blogToDelete = new Blog { Id = id };
-   _blogDbContext.Blogs.Attach(blogToDelete);
-   _blogDbContext.Blogs.Remove(blogToDelete);
-   await _blogDbContext.SaveChangesAsync();
-}
-  public async Task UpdateAsync(int id, Blog blog)
-    {
-        var postUpdate = new Blog { Id = id, Name = blog.Name, Description = blog.Description };
-        _blogDbContext.Blogs.Attach(postUpdate);
-        _blogDbContext.Entry(postUpdate).Property(bl => bl.Name).IsModified = true;
-        _blogDbContext.Entry(postUpdate).Property(bl => bl.Description).IsModified = true;
-        await _blogDbContext.SaveChangesAsync();
+        return await _blogDbContext.Blogs
+                    .AsNoTracking()
+                    .AnyAsync(bl => bl.Id != idBlog && bl.Name == name);
     }
-*/
 
+    //Se usa para creacion
+    public async Task<bool> NameInUseAsync(string name)
+    {
+        return await _blogDbContext.Blogs
+                    .AsNoTracking()
+                    .AnyAsync(bl => bl.Name == name);
+    }
+    public async Task<bool> IsOwnerBlog(int idUser, int idBlog)
+    {
+        return await _blogDbContext.Blogs
+                        .AsNoTracking()
+                        .AnyAsync(bl => bl.Id == idBlog && bl.UserId == idUser);
+    }
 }
 
 

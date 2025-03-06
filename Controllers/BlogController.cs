@@ -20,6 +20,41 @@ public class BlogController : ControllerBase
         _blogService = blogService;
     }
 
+    [HttpGet("UserBlogs/{userId}")]
+    public async Task<IActionResult> GetBlogs(int userId)
+    {
+        Result<List<BlogViewModel>> result = await _blogService.BlogsAsync(userId);
+
+        if (!result.IsSucces)
+        {
+            return result.State switch
+            {
+                State.InternalServerError => StatusCode(500, result.ErrorMessage),
+                _ => BadRequest(new { message = result.ErrorMessage })
+            };
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetBlog(int id)
+    {
+        Result<BlogViewModel> result = await _blogService.BlogAsync(id);
+
+        if (!result.IsSucces)
+        {
+            return result.State switch
+            {
+                State.NotExist => NotFound(new { message = result.ErrorMessage }),
+                State.InternalServerError => StatusCode(500, result.ErrorMessage),
+                _ => BadRequest(new { message = result.ErrorMessage })
+            };
+        }
+
+        return Ok(result.Value);
+    }
+
     /*
     Un usuario se puede crear blog para si mismo, 
     el admin tambien puede crear un blog para un usuario
@@ -92,63 +127,5 @@ public class BlogController : ControllerBase
         return Ok(new { message = result.SuccesMessage });
     }
 
-
-  
-
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetBlog(int id)
-    {
-        Result<BlogViewModel> result = await _blogService.BlogAsync(id);
-
-        if (!result.IsSucces)
-        {
-            return result.State switch
-            {
-                State.NotExist => NotFound(new { message = result.ErrorMessage }),
-                State.InternalServerError => StatusCode(500, result.ErrorMessage),
-                _ => BadRequest(new { message = result.ErrorMessage })
-            };
-        }
-
-        return Ok(result.Value);
-    }
-
-    [HttpGet("UserBlogs/{userId}")]
-    public async Task<IActionResult> GetBlogs(int userId)
-    {
-        Result<List<BlogViewModel>> result = await _blogService.BlogsAsync(userId);
-
-        if (!result.IsSucces)
-        {
-            return result.State switch
-            {
-                State.InternalServerError => StatusCode(500, result.ErrorMessage),
-                _ => BadRequest(new { message = result.ErrorMessage })
-            };
-        }
-
-        return Ok(result.Value);
-    }
-
-
-
-
-
 }
- /* [HttpGet("{idBlog}/posts")]
-    public async Task<IActionResult> GetPosts(int idBlog)
-    {
-        Result<List<PostViewModel>> result = await _blogService.PostsByBlogAsync(idBlog);
 
-        if (!result.IsSucces)
-        {
-            return result.State switch
-            {
-                State.NotExist => NotFound(new { message = result.ErrorMessage }),
-                State.InternalServerError => StatusCode(500, result.ErrorMessage),
-                _ => BadRequest(new { message = result.ErrorMessage })
-            };
-        }
-
-        return Ok(result.Value);
-    }*/

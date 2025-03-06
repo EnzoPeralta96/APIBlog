@@ -13,13 +13,16 @@ public class PostProfile : Profile
         CreateMap<Post, PostViewModel>();
 
         CreateMap<PostCreateViewModel, Post>()
-            .ForMember(dest => dest.Id, option => option.MapFrom(src => src.BlogId))
+            .ForMember(dest => dest.UserId, option => option.MapFrom(src => src.OwnerPostId))
             .BeforeMap((src, dest) =>
                 {
-                    dest.DateCreate = DateTime.Now;
+                    dest.DateCreate = DateTimeOffset.UtcNow;
+                    dest.Likes = 0;
+                    dest.Views = 0;
                 });
 
         CreateMap<PostUpdateViewModel, Post>()
-            .ForMember(dest => dest.Id, option => option.MapFrom(src => src.Title));
+            .ForMember(dest => dest.UserId, option => option.MapFrom(src => src.OwnerPostId))
+            .ForMember(dest => dest.Id, option => option.MapFrom(src => src.PostId));
     }
 }
