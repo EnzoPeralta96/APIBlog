@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using APIBlog.Shared;
 using APIBlog.ViewModels;
 using Microsoft.AspNetCore.Authorization;

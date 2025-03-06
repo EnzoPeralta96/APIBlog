@@ -1,23 +1,23 @@
-using APIBlog.AuthorizationPoliciesSample.Policies.Requeriment;
 using APIBlog.Models;
+using APIBlog.Policies.Authorization;
 using APIBlog.Repository;
 using APIBlog.Shared;
 using APIBlog.ViewModels;
 using AutoMapper;
-using Microsoft.AspNetCore.Authorization;
 namespace APIBlog.Services;
 
 public class UserService : IUserService
 {
-    private readonly IUserRepository _userRepository;
+    private readonly IUserAuthorizationService _userAuthorizationService;
     private readonly ISecurityService _securityService;
-    private readonly IAuthorizationService _authorizationService;
+    private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
 
-    public UserService(IUserRepository userRepository, ISecurityService securityService,IMapper mapper)
+    public UserService(IUserAuthorizationService userAuthorizationService, ISecurityService securityService, IUserRepository userRepository, IMapper mapper)
     {
-        _userRepository = userRepository;
+        _userAuthorizationService = userAuthorizationService;
         _securityService = securityService;
+        _userRepository = userRepository;
         _mapper = mapper;
     }
 
@@ -40,13 +40,17 @@ public class UserService : IUserService
     {
         try
         {
+            var authorizationResult = await _userAuthorizationService.AuthorizeUserAsync(userUpdate.Id);
+
+            if (!authorizationResult.IsSucces) return Result.Failure(authorizationResult.ErrorMessage, authorizationResult.State);
+
             bool exists = await _userRepository.ExistsAsync(userUpdate.Id);
 
             if (!exists) return Result.Failure($"El usuario con id = {userUpdate.Id} no existe", State.NotExist);
 
             bool nameInUse = await _userRepository.NameInUseAsync(userUpdate.Id, userUpdate.Name);
 
-            if(nameInUse) return Result.Failure($"Nombre de usuario: {userUpdate.Name} en uso", State.NameInUse);
+            if (nameInUse) return Result.Failure($"Nombre de usuario: {userUpdate.Name} en uso", State.NameInUse);
 
             var user = _mapper.Map<User>(userUpdate);
 
@@ -65,6 +69,10 @@ public class UserService : IUserService
     {
         try
         {
+            var authorizationResult = await _userAuthorizationService.AuthorizeUserAsync(userPasswordUpdate.Id);
+
+            if (!authorizationResult.IsSucces) return Result.Failure(authorizationResult.ErrorMessage, authorizationResult.State);
+
             if (userPasswordUpdate.Password != userPasswordUpdate.PasswordRepeat) return Result.Failure("Las contraseñas no coinciden", State.PasswordsDifferents);
 
             bool exists = await _userRepository.ExistsAsync(userPasswordUpdate.Id);
@@ -89,6 +97,10 @@ public class UserService : IUserService
     {
         try
         {
+            var authorizationResult = await _userAuthorizationService.AuthorizeUserAsync(id);
+
+            if (!authorizationResult.IsSucces) return Result.Failure(authorizationResult.ErrorMessage, authorizationResult.State);
+
             bool exists = await _userRepository.ExistsAsync(id);
 
             if (!exists) return Result.Failure($"El usuario con id = {id} no existe", State.NotExist);
@@ -102,7 +114,4 @@ public class UserService : IUserService
             return Result.Failure($"Error: {ex.Message}", State.InternalServerError);
         }
     }
-
-
-
 }

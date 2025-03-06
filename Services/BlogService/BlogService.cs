@@ -1,4 +1,5 @@
 using APIBlog.Models;
+using APIBlog.Policies.Authorization;
 using APIBlog.Repository;
 using APIBlog.Shared;
 using APIBlog.ViewModels;
@@ -7,15 +8,14 @@ using AutoMapper;
 namespace APIBlog.Services;
 public class BlogService : IBlogService
 {
-    private readonly BlogAuthorizationService _blogAuthorizationService;
+    private readonly IUserAuthorizationService _userAuthorizationService;
     private readonly IBlogRepository _blogRepository;
-    private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
-    public BlogService(BlogAuthorizationService blogAuthorizationService, IBlogRepository blogRepository, IUserRepository userRepository, IMapper mapper)
+    public BlogService(IUserAuthorizationService userAuthorizationService, IBlogRepository blogRepository, IUserRepository userRepository, IMapper mapper)
     {
-        _blogAuthorizationService = blogAuthorizationService;
+
         _blogRepository = blogRepository;
-        _userRepository = userRepository;
+        _userAuthorizationService = userAuthorizationService;
         _mapper = mapper;
     }
 
@@ -52,7 +52,7 @@ public class BlogService : IBlogService
         try
         {
 
-            var authorizationResult = await _blogAuthorizationService.AuthorizeAsync(blogCreate.OwnerBlogId);
+            var authorizationResult = await _userAuthorizationService.AuthorizeUserAsync(blogCreate.OwnerBlogId);
 
             if (!authorizationResult.IsSucces) return Result<BlogViewModel>.Failure(authorizationResult.ErrorMessage, authorizationResult.State);
 
@@ -88,7 +88,7 @@ public class BlogService : IBlogService
     {
         try
         {
-            var authorizationResult = await _blogAuthorizationService.AuthorizeAsync(blogUpdate.OwnerBlogId, blogUpdate.IdBlog);
+            var authorizationResult = await _userAuthorizationService.AuthorizeUserAsync(blogUpdate.OwnerBlogId, blogUpdate.IdBlog);
 
             if (!authorizationResult.IsSucces) return Result.Failure(authorizationResult.ErrorMessage, authorizationResult.State);
 
@@ -117,7 +117,7 @@ public class BlogService : IBlogService
     {
         try
         {
-            var authorizationResult = await _blogAuthorizationService.AuthorizeAsync(ownerId,blogId);
+            var authorizationResult = await _userAuthorizationService.AuthorizeUserAsync(ownerId, blogId);
 
             if (!authorizationResult.IsSucces) return Result.Failure(authorizationResult.ErrorMessage, authorizationResult.State);
 
@@ -172,11 +172,4 @@ public class BlogService : IBlogService
         }
 
     }
-
-
-
-
-
-
-
 }

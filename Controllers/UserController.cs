@@ -1,8 +1,6 @@
-using APIBlog.AuthorizationPoliciesSample.Policies.Requeriment;
 using APIBlog.Services;
 using APIBlog.Shared;
 using APIBlog.ViewModels;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,13 +11,11 @@ using Microsoft.AspNetCore.Mvc;
 public class UserController : ControllerBase
 {
     private readonly ILogger<UserController> _logger;
-    private readonly IAuthorizationService _authorizationService;
     private readonly IUserService _userService;
 
-    public UserController(ILogger<UserController> logger, IAuthorizationService authorizationService, IUserService userService)
+    public UserController(ILogger<UserController> logger, IUserService userService)
     {
         _logger = logger;
-        _authorizationService = authorizationService;
         _userService = userService;
     }
 
@@ -43,17 +39,13 @@ public class UserController : ControllerBase
     [HttpPut]
     public async Task<IActionResult> Update([FromBody] UserUpdateViewModel userUpdate)
     {
-        var requeriment = new UserRequirement(userUpdate.Id);
-
-        var authorizationResult = await _authorizationService.AuthorizeAsync(User, null, [requeriment]);
-
-        if (!authorizationResult.Succeeded) return Unauthorized();
 
         Result result = await _userService.UpdateAsync(userUpdate);
         if (!result.IsSucces)
         {
             return result.State switch
             {
+                State.Forbidden => StatusCode(403, result.ErrorMessage),
                 State.NotExist => NotFound(new { message = result.ErrorMessage }),
                 State.NameInUse => BadRequest(new { message = result.ErrorMessage }),
                 State.InternalServerError => StatusCode(500, result.ErrorMessage),
@@ -66,17 +58,13 @@ public class UserController : ControllerBase
     [HttpPut("ChangePassword")]
     public async Task<IActionResult> UpdatePassword([FromBody] UserPasswordUpdateViewModel userUpdate)
     {
-        var requeriment = new UserRequirement(userUpdate.Id);
-
-        var authorizationResult = await _authorizationService.AuthorizeAsync(User, null, [requeriment]);
-
-        if (!authorizationResult.Succeeded) return Unauthorized();
 
         Result result = await _userService.UpdatePasswordAsync(userUpdate);
         if (!result.IsSucces)
         {
             return result.State switch
             {
+                State.Forbidden => StatusCode(403, result.ErrorMessage),
                 State.PasswordsDifferents => BadRequest(new { message = result.ErrorMessage }),
                 State.NotExist => NotFound(new { message = result.ErrorMessage }),
                 State.InternalServerError => StatusCode(500, result.ErrorMessage),
@@ -89,17 +77,13 @@ public class UserController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var requeriment = new UserRequirement(id);
-
-        var authorizationResult = await _authorizationService.AuthorizeAsync(User, null, [requeriment]);
-
-        if (!authorizationResult.Succeeded) return Unauthorized();
 
         Result result = await _userService.DeleteAsync(id);
         if (!result.IsSucces)
         {
             return result.State switch
             {
+                State.Forbidden => StatusCode(403, result.ErrorMessage),
                 State.NotExist => NotFound(new { message = result.ErrorMessage }),
                 State.InternalServerError => StatusCode(500, result.ErrorMessage),
                 _ => BadRequest(new { message = result.ErrorMessage })

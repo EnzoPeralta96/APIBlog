@@ -1,13 +1,12 @@
 using System.Text;
-using APIBlog.AuthorizationPoliciesSample.Policies.Handlers;
-using APIBlog.AuthorizationPoliciesSample.Policies.Requeriment;
 using APIBlog.Data;
+using APIBlog.Policies.Authorization;
+using APIBlog.Policies.Requirements;
 using APIBlog.Repository;
 using APIBlog.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
@@ -52,23 +51,20 @@ builder.Services.AddAuthorization(options =>
 );
 
 builder.Services.AddHttpContextAccessor();
-
 builder.Services.AddScoped<IAuthorizationHandler, UserRequirementHandler>();
-
+builder.Services.AddScoped<IUserAuthorizationService, UserAuthorizationService>();
 var connectionString = builder.Configuration.GetConnectionString("PostgresSQLConnection");
 builder.Services.AddDbContext<BlogDbContext>(options => options.UseNpgsql(connectionString));
-
 builder.Services.AddAutoMapper(typeof(Program));
-
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IBlogRepository, BlogRepository>();
 builder.Services.AddScoped<IPostRepository, PostRepository>();
-builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISecurityService, SecutiryService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddScoped<IBlogService, BlogService>();
 builder.Services.AddScoped<IPostService, PostService>();
-builder.Services.AddScoped<BlogAuthorizationService>();
+
 
 
 builder.Services.AddAuthentication(config =>

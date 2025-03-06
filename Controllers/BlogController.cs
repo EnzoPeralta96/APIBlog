@@ -3,8 +3,6 @@ using APIBlog.ViewModels;
 using APIBlog.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using APIBlog.AuthorizationPoliciesSample.Policies.Requeriment;
-using APIBlog.Models;
 namespace APIBlog.Controllers;
 
 [ApiController]
@@ -95,24 +93,7 @@ public class BlogController : ControllerBase
     }
 
 
-   /* [HttpGet("{idBlog}/posts")]
-    public async Task<IActionResult> GetPosts(int idBlog)
-    {
-        Result<List<PostViewModel>> result = await _blogService.PostsByBlogAsync(idBlog);
-
-        if (!result.IsSucces)
-        {
-            return result.State switch
-            {
-                State.NotExist => NotFound(new { message = result.ErrorMessage }),
-                State.InternalServerError => StatusCode(500, result.ErrorMessage),
-                _ => BadRequest(new { message = result.ErrorMessage })
-            };
-        }
-
-        return Ok(result.Value);
-    }*/
-
+  
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetBlog(int id)
@@ -154,3 +135,20 @@ public class BlogController : ControllerBase
 
 
 }
+ /* [HttpGet("{idBlog}/posts")]
+    public async Task<IActionResult> GetPosts(int idBlog)
+    {
+        Result<List<PostViewModel>> result = await _blogService.PostsByBlogAsync(idBlog);
+
+        if (!result.IsSucces)
+        {
+            return result.State switch
+            {
+                State.NotExist => NotFound(new { message = result.ErrorMessage }),
+                State.InternalServerError => StatusCode(500, result.ErrorMessage),
+                _ => BadRequest(new { message = result.ErrorMessage })
+            };
+        }
+
+        return Ok(result.Value);
+    }*/

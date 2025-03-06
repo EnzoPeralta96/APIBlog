@@ -8,5 +8,6 @@ public enum State
     PasswordsDifferents,
     InternalServerError,
     Unauthorized,
-    Forbidden
+    Forbidden,
+    BadRequest
 }

@@ -4,7 +4,6 @@ using APIBlog.Services;
 using APIBlog.Shared;
 using APIBlog.ViewModels;
 using AutoMapper;
-using Microsoft.AspNetCore.Identity;
 
 public class LoginService : ILoginService
 {
