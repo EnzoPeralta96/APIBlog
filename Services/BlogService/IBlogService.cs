@@ -9,5 +9,5 @@ public interface IBlogService
     Task<Result<BlogViewModel>> BlogAsync(int id);
     Task<Result<BlogViewModel>> CreateAsync(BlogCreateViewModel blogCreate);
     Task<Result> UpdateAsync(BlogUpdateViewModel blogUpdate);
-    Task<Result> DeleteAsync(int ownerId, int blogId);
+    Task<Result> DeleteAsync(int blogId);
 }

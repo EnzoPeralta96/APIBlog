@@ -87,6 +87,15 @@ public class UserRepository : IUserRepository
                .AnyAsync(u => u.Id != id && u.Name == name);
     }
 
+     public bool Exists(int id)
+    {
+        return _blogDbContext.Users
+               .AsNoTracking()
+               .Any(u => u.Id == id);
+    }
+
+    
+
 
 
 }

@@ -13,9 +13,4 @@ public class BlogUpdateViewModel
     [Required(ErrorMessage = "La descripción del blog es requerida")]
     [MaxLength(200)]
     public string Description { get; set; }
-
-    [Required(ErrorMessage = "El Id del usuario propietario es requerido")]
-    public int OwnerBlogId { get; set; }
-
-
 }

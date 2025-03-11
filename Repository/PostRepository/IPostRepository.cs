@@ -9,5 +9,8 @@ public interface IPostRepository
     Task UpdateAsync(Post post);
     Task DeleteAsync(int id);
     Task<bool> ExistsAsync(int id);
-    Task<bool> IsOwnerPost(int userId, int postId);
+    bool IsOwnerPost(int userId, int postId);
+
+    bool IsOwnerBlogByPost(int userId, int postId);
+
 }

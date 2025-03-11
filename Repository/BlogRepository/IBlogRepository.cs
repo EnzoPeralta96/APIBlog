@@ -10,5 +10,5 @@ public interface IBlogRepository
     Task<bool> ExistsAsync(int id);
     Task<bool> NameInUseAsync(string name);
     Task<bool> NameInUseAsync(int idBlog, string name);
-    Task<bool> IsOwnerBlog(int idUser, int idBlog);
+    bool IsOwnerBlog(int idUser, int idBlog);
 }

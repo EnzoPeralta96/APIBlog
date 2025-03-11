@@ -19,5 +19,7 @@ public interface IUserRepository
     //Para crear
     Task<bool> NameInUseAsync(string name);
 
+    bool Exists(int id);
+
 
 }

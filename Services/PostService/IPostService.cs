@@ -9,6 +9,6 @@ public interface IPostService
     Task<Result<PostViewModel>> GetPostAsync(int id);
     Task<Result<PostViewModel>> CreateAsync(PostCreateViewModel postCreate);
     Task<Result> UpdateAsync(PostUpdateViewModel postUpdate);
-    Task<Result> DeleteAsync(int ownerId, int postId);
+    Task<Result> DeleteAsync(int postId);
 }
 

@@ -8,16 +8,18 @@ using AutoMapper;
 namespace APIBlog.Services;
 public class PostService : IPostService
 {
+    private readonly ILogger _logger;
     private readonly IUserAuthorizationService _userAuthorizationService;
     private readonly IBlogRepository _blogRepository;
     private readonly IPostRepository _postRepository;
     private readonly IMapper _mapper;
-    public PostService(IUserAuthorizationService userAuthorizationService, IPostRepository postRepository, IBlogRepository blogRepository, IMapper mapper)
+    public PostService(IUserAuthorizationService userAuthorizationService, IPostRepository postRepository, IBlogRepository blogRepository, IMapper mapper, ILogger<PostService> logger)
     {
         _userAuthorizationService = userAuthorizationService;
         _blogRepository = blogRepository;
         _postRepository = postRepository;
         _mapper = mapper;
+        _logger = logger;
     }
 
     public async Task<Result<List<PostViewModel>>> GetPostsByBlogAsync(int blogId)
@@ -26,7 +28,7 @@ public class PostService : IPostService
         {
             bool blogExists = await _blogRepository.ExistsAsync(blogId);
 
-            if (!blogExists) return Result<List<PostViewModel>>.Failure($"El blog id = {blogId} no existe", State.NotExist);
+            if (!blogExists) return Result<List<PostViewModel>>.Failure(Message.blog_not_exist, State.NotExist);
 
             var posts = await _postRepository.GetPostsByBlogAsync(blogId);
 
@@ -36,7 +38,8 @@ public class PostService : IPostService
         }
         catch (Exception ex)
         {
-            return Result<List<PostViewModel>>.Failure($"Error: {ex.Message}", State.InternalServerError);
+            _logger.LogError("Error inesperado: " + ex.ToString());
+            return Result<List<PostViewModel>>.Failure(Message.unexpected_error, State.InternalServerError);
         }
     }
 
@@ -46,7 +49,7 @@ public class PostService : IPostService
         {
             bool postExists = await _postRepository.ExistsAsync(id);
 
-            if (!postExists) return Result<PostViewModel>.Failure($"El post con id = {id} no existe", State.NotExist);
+            if (!postExists) return Result<PostViewModel>.Failure(Message.post_not_exist, State.NotExist);
 
             var post = await _postRepository.GetPostAsync(id);
 
@@ -56,7 +59,8 @@ public class PostService : IPostService
         }
         catch (Exception ex)
         {
-            return Result<PostViewModel>.Failure($"Error: {ex.Message}", State.InternalServerError);
+            _logger.LogError("Error inesperado: " + ex.ToString());
+            return Result<PostViewModel>.Failure(Message.unexpected_error, State.InternalServerError);
         }
     }
 
@@ -70,11 +74,13 @@ public class PostService : IPostService
 
             bool blogExists = await _blogRepository.ExistsAsync(postCreate.BlogId);
 
-            if (!blogExists) return Result<PostViewModel>.Failure($"El blog id = {postCreate.BlogId} no existe", State.NotExist);
+            if (!blogExists) return Result<PostViewModel>.Failure(Message.blog_not_exist, State.NotExist);
 
             var post = _mapper.Map<Post>(postCreate);
 
             await _postRepository.CreateAsync(post);
+
+            post = await _postRepository.GetPostAsync(post.Id);
 
             var postViewModel = _mapper.Map<PostViewModel>(post);
 
@@ -82,7 +88,9 @@ public class PostService : IPostService
         }
         catch (Exception ex)
         {
-            return Result<PostViewModel>.Failure($"Error: {ex.Message}", State.InternalServerError);
+            _logger.LogError("Error inesperado: " + ex.ToString());
+      
+            return Result<PostViewModel>.Failure(Message.unexpected_error, State.InternalServerError);
         }
     }
 
@@ -90,47 +98,50 @@ public class PostService : IPostService
     {
         try
         {
-            var authorizationUpdateResult = await _userAuthorizationService.AuthorizeUserPostRequestAsync(postUpdate.OwnerPostId, postUpdate.PostId);
+            var authorizationUpdateResult = await _userAuthorizationService.AuthorizeUserPostUpdateAsync(postUpdate.PostId);
 
             if (!authorizationUpdateResult.IsSucces) return Result.Failure(authorizationUpdateResult.ErrorMessage, authorizationUpdateResult.State);
 
-
             bool postExists = await _postRepository.ExistsAsync(postUpdate.PostId);
 
-            if (!postExists) return Result.Failure($"El post con id = {postUpdate.PostId} no existe", State.NotExist);
+            if (!postExists) return Result.Failure(Message.post_not_exist, State.NotExist);
 
             var post = _mapper.Map<Post>(postUpdate);
 
             await _postRepository.UpdateAsync(post);
 
-            return Result.Succes();
+            return Result.Succes(Message.post_updated);
         }
         catch (Exception ex)
         {
-            return Result.Failure($"Error: {ex.Message}", State.InternalServerError);
+            _logger.LogError("Error inesperado: " + ex.ToString());
+             return Result.Failure(Message.unexpected_error, State.InternalServerError);
         }
     }
 
-    public async Task<Result> DeleteAsync(int ownerId, int postId)
+    public async Task<Result> DeleteAsync(int postId)
     {
         try
         {
-            var authorizationDeleteResult = await _userAuthorizationService.AuthorizeUserPostRequestAsync(ownerId, postId);
+            var authorizationDeleteResult = await _userAuthorizationService.AuthorizeUserPostDeleteAsync(postId);
 
             if (!authorizationDeleteResult.IsSucces) return Result.Failure(authorizationDeleteResult.ErrorMessage, authorizationDeleteResult.State);
 
             bool postExists = await _postRepository.ExistsAsync(postId);
 
-            if (!postExists) return Result.Failure($"El post con id = {postId} no existe", State.NotExist);
+            if (!postExists) return Result.Failure(Message.post_not_exist, State.NotExist);
 
             await _postRepository.DeleteAsync(postId);
 
-            return Result.Succes("Post eliminado con éxito");
+            return Result.Succes(Message.post_deleted);
         }
         catch (Exception ex)
         {
-            return Result.Failure($"Error: {ex.Message}", State.InternalServerError);
+            _logger.LogError("Error inesperado: " + ex.ToString());
+            return Result.Failure(Message.unexpected_error, State.InternalServerError);
         }
+
+        
     }
 
 }

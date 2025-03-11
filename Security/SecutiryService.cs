@@ -50,7 +50,7 @@ public class SecutiryService : ISecurityService
         var jwtConfig = new JwtSecurityToken
         (
             claims : userClaims,
-            expires : DateTime.Now.AddMinutes(10),
+            expires : DateTime.Now.AddMinutes(30),
             signingCredentials : credentials
         );
 

@@ -9,12 +9,11 @@ using Microsoft.AspNetCore.Mvc;
 [Authorize]
 public class PostController : ControllerBase
 {
-    private readonly ILogger<PostController> _logger;
+    private string _friendlyMessage;
     private readonly IPostService _postService;
 
-    public PostController(ILogger<PostController> logger, IPostService postService)
+    public PostController(IPostService postService)
     {
-        _logger = logger;
         _postService = postService;
     }
 
@@ -24,13 +23,15 @@ public class PostController : ControllerBase
         Result<List<PostViewModel>> result = await _postService.GetPostsByBlogAsync(blogId);
         if (!result.IsSucces)
         {
+            _friendlyMessage = MessageProvider.Get(result.ErrorMessage);
             return result.State switch
             {
-                State.NotExist => NotFound(new { message = result.ErrorMessage }),
-                State.InternalServerError => StatusCode(500, result.ErrorMessage),
-                _ => BadRequest(new { message = result.ErrorMessage })
+                State.NotExist => NotFound(new { message = _friendlyMessage }),
+                State.InternalServerError => StatusCode(500, _friendlyMessage),
+                _ => BadRequest(new { message = _friendlyMessage })
             };
         }
+
         return Ok(result.Value);
     }
 
@@ -38,15 +39,18 @@ public class PostController : ControllerBase
     public async Task<IActionResult> GetPost(int id)
     {
         Result<PostViewModel> result = await _postService.GetPostAsync(id);
+
         if (!result.IsSucces)
         {
+            _friendlyMessage = MessageProvider.Get(result.ErrorMessage);
             return result.State switch
             {
-                State.NotExist => NotFound(new { message = result.ErrorMessage }),
-                State.InternalServerError => StatusCode(500, result.ErrorMessage),
-                _ => BadRequest(new { message = result.ErrorMessage })
+                State.NotExist => NotFound(new { message = _friendlyMessage }),
+                State.InternalServerError => StatusCode(500, _friendlyMessage),
+                _ => BadRequest(new { message = _friendlyMessage })
             };
         }
+
         return Ok(result.Value);
     }
 
@@ -55,17 +59,24 @@ public class PostController : ControllerBase
     public async Task<IActionResult> Create([FromBody] PostCreateViewModel postCreate)
     {
         Result<PostViewModel> result = await _postService.CreateAsync(postCreate);
+
         if (!result.IsSucces)
         {
+            _friendlyMessage = MessageProvider.Get(result.ErrorMessage);
             return result.State switch
             {
-                State.Forbidden => StatusCode(403, result.ErrorMessage),
-                State.NotExist => NotFound(new { message = result.ErrorMessage }),
-                State.InternalServerError => StatusCode(500, result.ErrorMessage),
-                _ => BadRequest(new { message = result.ErrorMessage })
+                State.Forbidden => StatusCode(403, _friendlyMessage),
+                State.NotExist => NotFound(new { message = _friendlyMessage }),
+                State.InternalServerError => StatusCode(500, _friendlyMessage),
+                _ => BadRequest(new { message = _friendlyMessage })
             };
         }
-        return Ok(result.Value);
+
+        return CreatedAtAction(
+            "GetPost",
+            new {id = result.Value.Id},
+            result.Value
+        );
     }
 
     //Lo puede hacer el Admin, OwnerPost
@@ -73,36 +84,44 @@ public class PostController : ControllerBase
     public async Task<IActionResult> Update(PostUpdateViewModel postRequest)
     {
         Result result = await _postService.UpdateAsync(postRequest);
+
         if (!result.IsSucces)
         {
+            _friendlyMessage = MessageProvider.Get(result.ErrorMessage);
             return result.State switch
             {
-                State.Forbidden => StatusCode(403, result.ErrorMessage),
-                State.NotExist => NotFound(new { message = result.ErrorMessage }),
-                State.InternalServerError => StatusCode(500, result.ErrorMessage),
-                _ => BadRequest(new { message = result.ErrorMessage })
+                State.Forbidden => StatusCode(403, _friendlyMessage),
+                State.NotExist => NotFound(new { message = _friendlyMessage }),
+                State.InternalServerError => StatusCode(500, _friendlyMessage),
+                _ => BadRequest(new { message = _friendlyMessage })
             };
         }
-        return NoContent();
+
+        _friendlyMessage = MessageProvider.Get(result.SuccesMessage);
+        return StatusCode(201, _friendlyMessage);
     }
 
     //Lo puede hacer el Admin, OwnerBlog u OwnerPost
 
-    [HttpDelete("{ownerId}/{postId}")]
-    public async Task<IActionResult> Delete(int ownerId, int postId)
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
     {
-        Result result = await _postService.DeleteAsync(ownerId, postId);
+        Result result = await _postService.DeleteAsync(id);
+
         if (!result.IsSucces)
         {
+            _friendlyMessage = MessageProvider.Get(result.ErrorMessage);
             return result.State switch
             {
-                State.Forbidden => StatusCode(403, result.ErrorMessage),
-                State.NotExist => NotFound(new { message = result.ErrorMessage }),
-                State.InternalServerError => StatusCode(500, result.ErrorMessage),
-                _ => BadRequest(new { message = result.ErrorMessage })
+                State.Forbidden => StatusCode(403, _friendlyMessage),
+                State.NotExist => NotFound(new { message = _friendlyMessage }),
+                State.InternalServerError => StatusCode(500, _friendlyMessage),
+                _ => BadRequest(new { message = _friendlyMessage })
             };
         }
-        return Ok(new { message = result.SuccesMessage });
+
+        _friendlyMessage = MessageProvider.Get(result.SuccesMessage);
+        return Ok(new { message = _friendlyMessage });
     }
 
 

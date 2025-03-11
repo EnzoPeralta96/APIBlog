@@ -4,8 +4,19 @@ A su vez el Blog puede contener 0 a n post.
 A su vez cada post puede tener 0 o n comentarios
 
 Blog : Solo el usuario puede crear blogs para sí mismo.
-Post en una blog : cualquier usuario puede crear posts en cualquier blog (con permisos de “colaborador”).
+Post en una blog : cualquier usuario puede crear posts en cualquier blog.
 Comentarios en un post : cualquier usuario puede comentar en cualquier post.
+
+Un usuario solo puede editar o borrar sus propios blog
+El dueño del blog puede borrar publicaciones en su blog.
+El dueño del blog puede borrar comentarios de publicaciones en su blog
+
+En usuario solo puede editar o borrar sus propios post
+El dueño del post puede borrar los comentarios en el post.
+
+El usuario puede editar o borrar sus propios comentarios.
+
+El admin tiene todos los permisos.
 
 
 

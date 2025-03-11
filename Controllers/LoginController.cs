@@ -7,12 +7,12 @@ using Microsoft.AspNetCore.Mvc;
 [Route("api/[controller]")]
 public class LoginController : ControllerBase
 {
-    private readonly ILogger<LoginController> _logger;
+    private string _friendlyMessage;
     private readonly ILoginService _loginService;
 
-    public LoginController(ILogger<LoginController> logger, ILoginService loginService)
+
+    public LoginController(ILoginService loginService)
     {
-        _logger = logger;
         _loginService = loginService;
     }
 
@@ -20,48 +20,60 @@ public class LoginController : ControllerBase
     public async Task<IActionResult> Login([FromBody] UserLoginViewModel userLogin)
     {
         Result<string> result = await _loginService.LoginAsync(userLogin);
+
         if (!result.IsSucces)
         {
+            _friendlyMessage = MessageProvider.Get(result.ErrorMessage);
             return result.State switch
             {
-                State.NotExist => BadRequest(new { message = result.ErrorMessage }),
-                State.InternalServerError => StatusCode(500, result.ErrorMessage),
-                _ => BadRequest(new { message = result.ErrorMessage })
+                State.NameInUse => BadRequest(new { message = _friendlyMessage }),
+                State.InternalServerError => StatusCode(500, _friendlyMessage),
+                _ => BadRequest(new { message = _friendlyMessage })
             };
         }
-        return Ok(new {token = result.Value});
+
+        return Ok(new { token = result.Value });
     }
 
     [Authorize(Policy = "RequireAdminRole")]
     [HttpPost("CreateAdmin")]
     public async Task<IActionResult> AdminRegister([FromBody] UserLoginViewModel userRegister)
     {
-        Result result = await _loginService.CreateAsync(userRegister,true);
+        Result result = await _loginService.CreateAsync(userRegister, true);
+
         if (!result.IsSucces)
         {
+            _friendlyMessage = MessageProvider.Get(result.ErrorMessage);
             return result.State switch
             {
-                State.NameInUse => BadRequest(new { message = result.ErrorMessage }),
-                State.InternalServerError => StatusCode(500, result.ErrorMessage),
-                _ => BadRequest(new { message = result.ErrorMessage })
+                State.NameInUse => BadRequest(new { message = _friendlyMessage }),
+                State.InternalServerError => StatusCode(500, _friendlyMessage),
+                _ => BadRequest(new { message = _friendlyMessage })
             };
         }
-        return Ok(new { mesagge = result.SuccesMessage });
+
+        _friendlyMessage = MessageProvider.Get(result.SuccesMessage);
+        return Ok(new { mesagge = _friendlyMessage });
+
     }
 
     [HttpPost("CreateAccount")]
     public async Task<IActionResult> UserRegister([FromBody] UserLoginViewModel userRegister)
     {
+
         Result result = await _loginService.CreateAsync(userRegister);
         if (!result.IsSucces)
         {
+            _friendlyMessage = MessageProvider.Get(result.ErrorMessage);
             return result.State switch
             {
-                State.NameInUse => BadRequest(new { message = result.ErrorMessage }),
-                State.InternalServerError => StatusCode(500, result.ErrorMessage),
-                _ => BadRequest(new { message = result.ErrorMessage })
+                State.NameInUse => BadRequest(new { message = _friendlyMessage }),
+                State.InternalServerError => StatusCode(500, _friendlyMessage),
+                _ => BadRequest(new { message = _friendlyMessage })
             };
         }
-        return Ok(new { mesagge = result.SuccesMessage });
+
+        _friendlyMessage = MessageProvider.Get(result.SuccesMessage);
+        return Ok(new { mesagge = _friendlyMessage });
     }
 }

@@ -11,12 +11,11 @@ namespace APIBlog.Controllers;
 public class BlogController : ControllerBase
 {
 
-    private readonly ILogger<BlogController> _logger;
+    private string _friendlyMessage;
     private readonly IBlogService _blogService;
 
-    public BlogController(ILogger<BlogController> logger, IBlogService blogService)
+    public BlogController(IBlogService blogService)
     {
-        _logger = logger;
         _blogService = blogService;
     }
 
@@ -27,10 +26,11 @@ public class BlogController : ControllerBase
 
         if (!result.IsSucces)
         {
+            _friendlyMessage = MessageProvider.Get(result.ErrorMessage);
             return result.State switch
             {
-                State.InternalServerError => StatusCode(500, result.ErrorMessage),
-                _ => BadRequest(new { message = result.ErrorMessage })
+                State.InternalServerError => StatusCode(500, _friendlyMessage),
+                _ => BadRequest(new { message = _friendlyMessage })
             };
         }
 
@@ -44,11 +44,12 @@ public class BlogController : ControllerBase
 
         if (!result.IsSucces)
         {
+            _friendlyMessage = MessageProvider.Get(result.ErrorMessage);
             return result.State switch
             {
-                State.NotExist => NotFound(new { message = result.ErrorMessage }),
-                State.InternalServerError => StatusCode(500, result.ErrorMessage),
-                _ => BadRequest(new { message = result.ErrorMessage })
+                State.NotExist => NotFound(new { message = _friendlyMessage }),
+                State.InternalServerError => StatusCode(500, _friendlyMessage),
+                _ => BadRequest(new { message = _friendlyMessage })
             };
         }
 
@@ -67,16 +68,22 @@ public class BlogController : ControllerBase
 
         if (!result.IsSucces)
         {
+            _friendlyMessage = MessageProvider.Get(result.ErrorMessage);
             return result.State switch
             {
-                State.Forbidden => StatusCode(403, result.ErrorMessage),
-                State.NotExist => NotFound(new { message = result.ErrorMessage }),
-                State.NameInUse => BadRequest(new { message = result.ErrorMessage }),
-                State.InternalServerError => StatusCode(500, result.ErrorMessage),
-                _ => BadRequest(new { message = result.ErrorMessage })
+                State.Forbidden => StatusCode(403, _friendlyMessage),
+                State.NotExist => NotFound(new { message = _friendlyMessage }),
+                State.NameInUse => BadRequest(new { message = _friendlyMessage }),
+                State.InternalServerError => StatusCode(500, _friendlyMessage),
+                _ => BadRequest(new { message = _friendlyMessage })
             };
         }
-        return Ok(result.Value);
+        
+        return CreatedAtAction(
+            "GetBlog",
+            new { id = result.Value.Id },
+            result.Value
+        );
     }
 
 
@@ -91,40 +98,46 @@ public class BlogController : ControllerBase
 
         if (!result.IsSucces)
         {
+            _friendlyMessage = MessageProvider.Get(result.ErrorMessage);
             return result.State switch
             {
-                State.Forbidden => StatusCode(403, result.ErrorMessage),
-                State.NotExist => NotFound(new { message = result.ErrorMessage }),
-                State.NameInUse => BadRequest(new { message = result.ErrorMessage }),
-                State.InternalServerError => StatusCode(500, result.ErrorMessage),
-                _ => BadRequest(new { message = result.ErrorMessage })
+                State.Forbidden => StatusCode(403, _friendlyMessage),
+                State.NotExist => NotFound(new { message = _friendlyMessage }),
+                State.NameInUse => BadRequest(new { message = _friendlyMessage }),
+                State.InternalServerError => StatusCode(500, _friendlyMessage),
+                _ => BadRequest(new { message = _friendlyMessage })
             };
         }
 
-        return NoContent();
+        _friendlyMessage = MessageProvider.Get(result.SuccesMessage);
+        return StatusCode(201, _friendlyMessage);
     }
 
     /*
     El que puede borrar un blog es el dueño o un admin
     */
-    [HttpDelete("{idOwner}/{idBlog}")]
-    public async Task<IActionResult> Delete(int idOwner, int idBlog)
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
     {
 
-        Result result = await _blogService.DeleteAsync(idOwner, idBlog);
+        Result result = await _blogService.DeleteAsync(id);
 
         if (!result.IsSucces)
         {
+            _friendlyMessage = MessageProvider.Get(result.ErrorMessage);
             return result.State switch
             {
-                State.Forbidden => StatusCode(403, result.ErrorMessage),
-                State.NotExist => NotFound(new { message = result.ErrorMessage }),
-                State.InternalServerError => StatusCode(500, result.ErrorMessage),
-                _ => BadRequest(new { message = result.ErrorMessage })
+                State.Forbidden => StatusCode(403, _friendlyMessage),
+                State.NotExist => NotFound(new { message = _friendlyMessage }),
+                State.NameInUse => BadRequest(new { message = _friendlyMessage }),
+                State.InternalServerError => StatusCode(500, _friendlyMessage),
+                _ => BadRequest(new { message = _friendlyMessage })
             };
         }
 
-        return Ok(new { message = result.SuccesMessage });
+        _friendlyMessage = MessageProvider.Get(result.SuccesMessage);
+
+        return Ok(new { message = _friendlyMessage });
     }
 
 }

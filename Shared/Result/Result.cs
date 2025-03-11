@@ -2,23 +2,28 @@ namespace APIBlog.Shared;
 public class Result
 {
     public bool IsSucces { get; }
-    public string SuccesMessage { get; }
-    public string ErrorMessage { get; }
+    public Message SuccesMessage { get; }
+    public Message ErrorMessage { get; }
     public State State { get; }
 
-    private Result(bool isSucces, string message, State state)
+    private Result(bool isSucces, Message message, State state)
     {
         IsSucces = isSucces;
         ErrorMessage = message;
         State = state;
     }
-    private Result(bool isSucces, string succesMessage, string errorMesagge)
+    private Result(bool isSucces, Message succesMessage)
     {
         IsSucces = isSucces;
         SuccesMessage = succesMessage;
-        ErrorMessage = errorMesagge;
     }
-    
-    public static Result Succes(string? succesMessage=null) => new Result(true, succesMessage,null);
-    public static Result Failure(string errorMessage, State state) => new Result(false, errorMessage, state);
+
+    private Result(bool isSucces)
+    {
+        IsSucces = isSucces;
+    }
+
+    public static Result Succes() => new Result(true);
+    public static Result Succes(Message succesMessage) => new Result(true, succesMessage);
+    public static Result Failure(Message errorMessage, State state) => new Result(false, errorMessage, state);
 }

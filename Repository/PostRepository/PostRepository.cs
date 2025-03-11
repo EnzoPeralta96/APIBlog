@@ -62,10 +62,19 @@ public class PostRepository : IPostRepository
                     .AnyAsync(p => p.Id == id);
     }
 
-    public async Task<bool> IsOwnerPost(int idUser, int idPost)
+    public bool IsOwnerPost(int idUser, int idPost)
     {
-        return await _blogDbContext.Posts
+        return _blogDbContext.Posts
                          .AsNoTracking()
-                         .AnyAsync(post => post.UserId == idUser && post.Id == idPost);
-    }  
+                         .Any(post => post.UserId == idUser && post.Id == idPost);
+    }
+
+    public bool IsOwnerBlogByPost(int userId, int postId)
+    {
+        return _blogDbContext.Posts
+                .AsNoTracking()
+                .Any(p => p.Blog.UserId == userId && p.Id == postId);
+    }
+
+
 }

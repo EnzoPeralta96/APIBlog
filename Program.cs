@@ -1,7 +1,8 @@
 using System.Text;
 using APIBlog.Data;
+using APIBlog.Models;
+using APIBlog.Policies;
 using APIBlog.Policies.Authorization;
-using APIBlog.Policies.Requirements;
 using APIBlog.Repository;
 using APIBlog.Security;
 using APIBlog.Services;
@@ -53,8 +54,14 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IAuthorizationHandler, UserRequirementHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, BlogRequirementHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, PostUpdateRequirementHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, PostDeleteRequirementHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, CommentUpdateRequirementHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, CommentDeleteRequirementHandler>();
 builder.Services.AddScoped<IUserAuthorizationService, UserAuthorizationService>();
 builder.Services.AddScoped<ISecurityService, SecutiryService>();
+
 var connectionString = builder.Configuration.GetConnectionString("PostgresSQLConnection");
 builder.Services.AddDbContext<BlogDbContext>(options => options.UseNpgsql(connectionString));
 builder.Services.AddAutoMapper(typeof(Program));

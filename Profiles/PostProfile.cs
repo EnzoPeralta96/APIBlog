@@ -22,7 +22,6 @@ public class PostProfile : Profile
                 });
 
         CreateMap<PostUpdateViewModel, Post>()
-            .ForMember(dest => dest.UserId, option => option.MapFrom(src => src.OwnerPostId))
             .ForMember(dest => dest.Id, option => option.MapFrom(src => src.PostId));
     }
 }

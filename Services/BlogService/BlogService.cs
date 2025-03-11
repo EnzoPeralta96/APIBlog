@@ -8,20 +8,29 @@ using AutoMapper;
 namespace APIBlog.Services;
 public class BlogService : IBlogService
 {
+    private readonly ILogger _logger;
     private readonly IUserAuthorizationService _userAuthorizationService;
     private readonly IBlogRepository _blogRepository;
+
+    private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
-    public BlogService(IUserAuthorizationService userAuthorizationService, IBlogRepository blogRepository, IUserRepository userRepository, IMapper mapper)
+    public BlogService(IUserAuthorizationService userAuthorizationService, IBlogRepository blogRepository, IUserRepository userRepository, IMapper mapper, ILogger<BlogService> logger)
     {
 
         _blogRepository = blogRepository;
+        _userRepository = userRepository;
         _userAuthorizationService = userAuthorizationService;
         _mapper = mapper;
+        _logger = logger;
     }
     public async Task<Result<List<BlogViewModel>>> BlogsAsync(int userId)
     {
         try
         {
+            var userExists = await _userRepository.ExistsAsync(userId);
+
+            if (!userExists) return Result<List<BlogViewModel>>.Failure(Message.user_not_exist, State.NotExist);
+
             var blogs = await _blogRepository.BlogsAsync(userId);
 
             var blogsViewModel = _mapper.Map<List<BlogViewModel>>(blogs);
@@ -30,17 +39,18 @@ public class BlogService : IBlogService
         }
         catch (Exception ex)
         {
-            return Result<List<BlogViewModel>>.Failure($"Error: {ex.Message}", State.InternalServerError);
+              _logger.LogError("Error inesperado: " + ex.ToString());
+            return Result<List<BlogViewModel>>.Failure(Message.unexpected_error, State.InternalServerError);
         }
     }
-    
+
     public async Task<Result<BlogViewModel>> BlogAsync(int id)
     {
         try
         {
             var blog = await _blogRepository.GetBlogAsync(id);
 
-            if (blog is null) return Result<BlogViewModel>.Failure($"El blog con id = {id} no existe", State.NotExist);
+            if (blog is null) return Result<BlogViewModel>.Failure(Message.blog_not_exist, State.NotExist);
 
             var blogViewModel = _mapper.Map<BlogViewModel>(blog);
 
@@ -48,7 +58,8 @@ public class BlogService : IBlogService
         }
         catch (Exception ex)
         {
-            return Result<BlogViewModel>.Failure($"Error: {ex.Message}", State.InternalServerError);
+            _logger.LogError("Error inesperado: " + ex.ToString());
+            return Result<BlogViewModel>.Failure(Message.unexpected_error, State.InternalServerError);
         }
     }
 
@@ -66,30 +77,28 @@ public class BlogService : IBlogService
     {
         try
         {
-
             var authorizationResult = await _userAuthorizationService.AuthorizeUserAsync(blogCreate.OwnerBlogId);
 
             if (!authorizationResult.IsSucces) return Result<BlogViewModel>.Failure(authorizationResult.ErrorMessage, authorizationResult.State);
 
             bool nameBlogInUse = await _blogRepository.NameInUseAsync(blogCreate.Name);
 
-            if (nameBlogInUse) return Result<BlogViewModel>.Failure("El blog ya existe", State.NameInUse);
+            if (nameBlogInUse) return Result<BlogViewModel>.Failure(Message.blogname_in_use, State.NameInUse);
 
             var blog = _mapper.Map<Blog>(blogCreate);
 
             await _blogRepository.CreateAsync(blog);
 
-            /*
-            Una vez que se crea el post, EF hace un seguimiento de blog
-            por lo que luego de crearlo, ya tiene su id
-            */
+            blog = await _blogRepository.GetBlogAsync(blog.Id);
+
             var blogViewModels = _mapper.Map<BlogViewModel>(blog);
 
             return Result<BlogViewModel>.Succes(blogViewModels);
         }
         catch (Exception ex)
         {
-            return Result<BlogViewModel>.Failure($"Error inesperado: {ex.Message}", State.InternalServerError);
+            _logger.LogError("Error inesperado: " + ex.ToString());
+            return Result<BlogViewModel>.Failure(Message.unexpected_error, State.InternalServerError);
         }
     }
 
@@ -103,74 +112,53 @@ public class BlogService : IBlogService
     {
         try
         {
-            var authorizationResult = await _userAuthorizationService.AuthorizeUserBlogAsync(blogUpdate.OwnerBlogId, blogUpdate.IdBlog);
+            var authorizationResult = await _userAuthorizationService.AuthorizeUserBlogAsync(blogUpdate.IdBlog);
 
             if (!authorizationResult.IsSucces) return Result.Failure(authorizationResult.ErrorMessage, authorizationResult.State);
 
             bool blogExists = await _blogRepository.ExistsAsync(blogUpdate.IdBlog);
 
-            if (!blogExists) return Result.Failure("El blog no existe", State.NotExist);
+            if (!blogExists) return Result.Failure(Message.blog_not_exist, State.NotExist);
 
             bool nameInUse = await _blogRepository.NameInUseAsync(blogUpdate.IdBlog, blogUpdate.Name);
 
-            if (nameInUse) return Result.Failure("Nombre de blog en uso", State.NameInUse);
+            if (nameInUse) return Result.Failure(Message.blogname_in_use, State.NameInUse);
 
             var blog = _mapper.Map<Blog>(blogUpdate);
 
             await _blogRepository.UpdateAsync(blog);
 
-            return Result.Succes();
+            return Result.Succes(Message.blog_updated);
         }
         catch (Exception ex)
         {
-            return Result.Failure($"Error: {ex.Message}", State.InternalServerError);
+            _logger.LogError("Error inesperado: " + ex.ToString());
+            return Result.Failure(Message.unexpected_error, State.InternalServerError);
         }
 
     }
 
-    public async Task<Result> DeleteAsync(int ownerId, int blogId)
+    public async Task<Result> DeleteAsync(int blogId)
     {
         try
         {
-            var authorizationResult = await _userAuthorizationService.AuthorizeUserBlogAsync(ownerId, blogId);
+            var authorizationResult = await _userAuthorizationService.AuthorizeUserBlogAsync(blogId);
 
             if (!authorizationResult.IsSucces) return Result.Failure(authorizationResult.ErrorMessage, authorizationResult.State);
 
             bool blogExists = await _blogRepository.ExistsAsync(blogId);
 
-            if (!blogExists) return Result.Failure($"El Blog con id = {blogId} no existe", State.NotExist);
+            if (!blogExists) return Result.Failure(Message.blog_not_exist, State.NotExist);
 
             await _blogRepository.DeleteAsync(blogId);
 
-            return Result.Succes("Blog eliminado con éxito");
+            return Result.Succes(Message.blog_deleted);
         }
         catch (Exception ex)
         {
-            return Result.Failure($"Error: {ex.Message}", State.InternalServerError);
+            _logger.LogError("Error inesperado: " + ex.ToString());
+            return Result.Failure(Message.unexpected_error, State.InternalServerError);
         }
 
     }
-
-
-
-    /*public async Task<Result<List<PostViewModel>>> PostsByBlogAsync(int id)
-    {
-        try
-        {
-            bool blogExists = await _blogRepository.ExistsAsync(id);
-
-            if (!blogExists) return Result<List<PostViewModel>>.Failure($"El Blog con id = {id} no existe", State.NotExist);
-
-            List<Post> posts = await _blogRepository.PostsByBlogAsync(id);
-
-            var postView = _mapper.Map<List<PostViewModel>>(posts);
-
-            return Result<List<PostViewModel>>.Succes(postView);
-        }
-        catch (Exception ex)
-        {
-            return Result<List<PostViewModel>>.Failure($"Error: {ex.Message}", State.InternalServerError);
-        }
-
-    }*/
 }

@@ -1,7 +1,7 @@
 
 using Microsoft.AspNetCore.Authorization;
 
-namespace APIBlog.Policies.Requirements;
+namespace APIBlog.Policies;
 public class UserRequirement : IAuthorizationRequirement
 {
     public int UserId { get; }

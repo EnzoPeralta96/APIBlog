@@ -10,12 +10,11 @@ using Microsoft.AspNetCore.Mvc;
 
 public class UserController : ControllerBase
 {
-    private readonly ILogger<UserController> _logger;
-    private readonly IUserService _userService;
 
-    public UserController(ILogger<UserController> logger, IUserService userService)
+    private string _friendlyMessage;
+    private readonly IUserService _userService;
+    public UserController(IUserService userService)
     {
-        _logger = logger;
         _userService = userService;
     }
 
@@ -25,11 +24,12 @@ public class UserController : ControllerBase
         Result<UserViewModel> result = await _userService.GetUserAsync(id);
         if (!result.IsSucces)
         {
+            _friendlyMessage = MessageProvider.Get(result.ErrorMessage);
             return result.State switch
             {
-                State.NotExist => NotFound(new { message = result.ErrorMessage }),
-                State.InternalServerError => StatusCode(500, result.ErrorMessage),
-                _ => BadRequest(new { message = result.ErrorMessage })
+                State.NotExist => NotFound(new { message = _friendlyMessage }),
+                State.InternalServerError => StatusCode(500, _friendlyMessage),
+                _ => BadRequest(new { message = _friendlyMessage })
             };
         }
 
@@ -43,16 +43,19 @@ public class UserController : ControllerBase
         Result result = await _userService.UpdateAsync(userUpdate);
         if (!result.IsSucces)
         {
+            _friendlyMessage = MessageProvider.Get(result.ErrorMessage);
             return result.State switch
             {
-                State.Forbidden => StatusCode(403, result.ErrorMessage),
-                State.NotExist => NotFound(new { message = result.ErrorMessage }),
-                State.NameInUse => BadRequest(new { message = result.ErrorMessage }),
-                State.InternalServerError => StatusCode(500, result.ErrorMessage),
-                _ => BadRequest(new { message = result.ErrorMessage })
+                State.Forbidden => StatusCode(403, _friendlyMessage),
+                State.NotExist => NotFound(new { message = _friendlyMessage }),
+                State.NameInUse => BadRequest(new { message = _friendlyMessage }),
+                State.InternalServerError => StatusCode(500, _friendlyMessage),
+                _ => BadRequest(new { message = _friendlyMessage })
             };
         }
-        return Created();
+
+        _friendlyMessage = MessageProvider.Get(result.SuccesMessage);
+        return StatusCode(201, _friendlyMessage);
     }
 
     [HttpPut("ChangePassword")]
@@ -60,18 +63,22 @@ public class UserController : ControllerBase
     {
 
         Result result = await _userService.UpdatePasswordAsync(userUpdate);
+
         if (!result.IsSucces)
         {
+            _friendlyMessage = MessageProvider.Get(result.ErrorMessage);
             return result.State switch
             {
-                State.Forbidden => StatusCode(403, result.ErrorMessage),
-                State.PasswordsDifferents => BadRequest(new { message = result.ErrorMessage }),
-                State.NotExist => NotFound(new { message = result.ErrorMessage }),
-                State.InternalServerError => StatusCode(500, result.ErrorMessage),
-                _ => BadRequest(new { message = result.ErrorMessage })
+                State.Forbidden => StatusCode(403, _friendlyMessage),
+                State.NotExist => NotFound(new { message = _friendlyMessage }),
+                State.PasswordsDifferents => BadRequest(new { message = _friendlyMessage }),
+                State.InternalServerError => StatusCode(500, _friendlyMessage),
+                _ => BadRequest(new { message = _friendlyMessage })
             };
         }
-        return Created();
+
+        _friendlyMessage = MessageProvider.Get(result.SuccesMessage);
+        return StatusCode(201, _friendlyMessage);
     }
 
     [HttpDelete("{id}")]
@@ -79,16 +86,20 @@ public class UserController : ControllerBase
     {
 
         Result result = await _userService.DeleteAsync(id);
+
         if (!result.IsSucces)
         {
+            _friendlyMessage = MessageProvider.Get(result.ErrorMessage);
             return result.State switch
             {
-                State.Forbidden => StatusCode(403, result.ErrorMessage),
-                State.NotExist => NotFound(new { message = result.ErrorMessage }),
-                State.InternalServerError => StatusCode(500, result.ErrorMessage),
-                _ => BadRequest(new { message = result.ErrorMessage })
+                State.Forbidden => StatusCode(403, _friendlyMessage),
+                State.NotExist => NotFound(new { message = _friendlyMessage }),
+                State.InternalServerError => StatusCode(500, _friendlyMessage),
+                _ => BadRequest(new { message = _friendlyMessage })
             };
         }
-        return Ok(new { message = result.SuccesMessage });
+
+        _friendlyMessage = MessageProvider.Get(result.SuccesMessage);
+        return Ok(new { message = _friendlyMessage });
     }
 }

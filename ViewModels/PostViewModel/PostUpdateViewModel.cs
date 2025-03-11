@@ -14,7 +14,4 @@ public class PostUpdateViewModel
     [MaxLength(1000)]
     public string Content { get; set; }
 
-    [Required(ErrorMessage = "El Id del creador del Post es requerido")]
-    public int OwnerPostId { get; set; }
-
 }

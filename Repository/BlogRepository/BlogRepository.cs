@@ -14,18 +14,17 @@ public class BlogRepository : IBlogRepository
     {
         return await _blogDbContext.Blogs
                     .AsNoTracking()
-                    .Where(bl => bl.UserId == userId)
                     .Include(bl => bl.User)
+                    .Where(bl => bl.UserId == userId)
                     .ToListAsync();
     }
 
     public async Task<Blog> GetBlogAsync(int id)
     {
-        var blog = await _blogDbContext.Blogs
+        return await _blogDbContext.Blogs
                         .AsNoTracking()
                         .Include(bl => bl.User)
                         .FirstOrDefaultAsync(bl => bl.Id == id);
-        return blog;
     }
 
     public async Task CreateAsync(Blog blog)
@@ -72,12 +71,13 @@ public class BlogRepository : IBlogRepository
                     .AsNoTracking()
                     .AnyAsync(bl => bl.Name == name);
     }
-    public async Task<bool> IsOwnerBlog(int idUser, int idBlog)
+    public bool IsOwnerBlog(int idUser, int idBlog)
     {
-        return await _blogDbContext.Blogs
+        return  _blogDbContext.Blogs
                         .AsNoTracking()
-                        .AnyAsync(bl => bl.Id == idBlog && bl.UserId == idUser);
+                        .Any(bl => bl.Id == idBlog && bl.UserId == idUser);
     }
+
 }
 
 
