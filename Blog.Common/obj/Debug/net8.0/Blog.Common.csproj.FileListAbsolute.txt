@@ -1,0 +1,12 @@
+C:\Users\enzo_\OneDrive\Desktop\Taller2\BlogProyect\Blog\Blog.Common\bin\Debug\net8.0\Blog.Common.deps.json
+C:\Users\enzo_\OneDrive\Desktop\Taller2\BlogProyect\Blog\Blog.Common\bin\Debug\net8.0\Blog.Common.dll
+C:\Users\enzo_\OneDrive\Desktop\Taller2\BlogProyect\Blog\Blog.Common\bin\Debug\net8.0\Blog.Common.pdb
+C:\Users\enzo_\OneDrive\Desktop\Taller2\BlogProyect\Blog\Blog.Common\obj\Debug\net8.0\Blog.Common.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\enzo_\OneDrive\Desktop\Taller2\BlogProyect\Blog\Blog.Common\obj\Debug\net8.0\Blog.Common.AssemblyInfoInputs.cache
+C:\Users\enzo_\OneDrive\Desktop\Taller2\BlogProyect\Blog\Blog.Common\obj\Debug\net8.0\Blog.Common.AssemblyInfo.cs
+C:\Users\enzo_\OneDrive\Desktop\Taller2\BlogProyect\Blog\Blog.Common\obj\Debug\net8.0\Blog.Common.csproj.CoreCompileInputs.cache
+C:\Users\enzo_\OneDrive\Desktop\Taller2\BlogProyect\Blog\Blog.Common\obj\Debug\net8.0\Blog.Common.sourcelink.json
+C:\Users\enzo_\OneDrive\Desktop\Taller2\BlogProyect\Blog\Blog.Common\obj\Debug\net8.0\Blog.Common.dll
+C:\Users\enzo_\OneDrive\Desktop\Taller2\BlogProyect\Blog\Blog.Common\obj\Debug\net8.0\refint\Blog.Common.dll
+C:\Users\enzo_\OneDrive\Desktop\Taller2\BlogProyect\Blog\Blog.Common\obj\Debug\net8.0\Blog.Common.pdb
+C:\Users\enzo_\OneDrive\Desktop\Taller2\BlogProyect\Blog\Blog.Common\obj\Debug\net8.0\ref\Blog.Common.dll
